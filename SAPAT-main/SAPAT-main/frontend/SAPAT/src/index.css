@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+@plugin "daisyui" {
+  themes: light --default;
+}
+
+@theme {
+  --color-darkbrown: #4a2611;
+  --color-deepbrown: #8b4513;
+  --color-charcoal-header: #333333;
+  --color-charcoal-body: #202020;
+  --color-green-accent: #c5d995;
+  --color-green-button: #5c8b57;
+  --color-red-button: #8b1313;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
