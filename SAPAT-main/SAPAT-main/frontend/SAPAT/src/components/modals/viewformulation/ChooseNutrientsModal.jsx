@@ -98,6 +98,7 @@ function ChooseNutrientsModal({ isOpen, onClose, nutrients, onResult }) {
       id="choose_nutrients_modal"
       className={`modal ${isOpen ? 'modal-open' : ''}`}
     >
+      
       <div className="modal-box relative mt-[64px] w-11/12 max-w-3xl rounded-3xl bg-white md:mt-0">
         {/* Close button */}
         <button

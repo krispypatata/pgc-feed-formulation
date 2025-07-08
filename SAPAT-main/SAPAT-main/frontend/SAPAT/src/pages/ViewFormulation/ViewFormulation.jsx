@@ -707,7 +707,7 @@ function ViewFormulation({
       ))
     }
   }
-
+  const [phase, setPhase] = useState('Custom');
   // loading due to api calls
   if (isLoading || formulation.length === 0 || !owner) {
     return <Loading />
@@ -728,6 +728,8 @@ function ViewFormulation({
     nutrients,
   } = formulationRealTime
 
+
+  
   return (
     <div className="flex h-full flex-col bg-gray-50 md:flex-row">
       {/* Main Content */}
@@ -861,7 +863,7 @@ function ViewFormulation({
           )}
 
           {/* Form Fields - Grid on desktop, Stack on mobile */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+          <div className={`grid grid-cols-1 gap-4 md:grid-cols-5`}>
             <div>
               <label className="label text-sm font-medium">Code</label>
               <input
@@ -923,11 +925,37 @@ function ViewFormulation({
                 <option value="Swine">Swine</option>
                 <option value="Pig">Pig</option>
                 <option value="Poultry">Poultry</option>
+                <option value="Water Buffalo">Water Buffalo</option>
               </select>
               <Selections id="input-animal_group" others={others} />
             </div>
-          </div>
 
+            
+          </div>
+          
+          {/* This is where you place your Gestational Phases */}
+
+          {animal_group === 'Water Buffalo' && (
+          <div className={`grid grid-cols-1 gap-4 md:grid-cols-5`}>
+            <div className="">
+                <label className="label text-sm font-medium text-black">{animal_group} Phase</label>
+                <div>
+                  <select
+                    className="select select-bordered w-full rounded-xl bg-white"
+                    value={phase}
+                    onChange={(e) => setPhase(e.target.value)}
+                    // disabled={isDisabled}
+                  >
+                    <option value="Gestational Phase">Gestational Phase</option>
+                    <option value="Normal Phase">Normal Phase</option>
+                    <option value="Lactating Phase">Lactating Phase</option>
+                    <option value="Custom">Custom</option>
+                  </select>
+                </div>
+            </div>
+          </div>
+          )}
+            
           {/* Tables - Grid on desktop, Stack on mobile */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Ingredients Table */}

@@ -256,6 +256,8 @@ function Formulations() {
         onClose={() => setIsCreateModalOpen(false)}
         onResult={handleCreateResult}
       />
+
+      
       <EditFormulationModal
         formulations={formulations}
         isOpen={isEditModalOpen}

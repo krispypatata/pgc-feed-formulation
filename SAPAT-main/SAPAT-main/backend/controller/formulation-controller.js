@@ -1,4 +1,5 @@
 import Formulation from '../models/formulation-model.js';
+import SpecialFormulation from '../models/special-formulation-model.js';
 
 
 const createFormulation = async (req, res) => {
@@ -47,6 +48,46 @@ const getAllFormulations = async (req, res) => {
         // pagination
         const totalCount = filteredFormulations.length;
         const paginatedFormulations = filteredFormulations.slice(skip, skip + limit);
+
+        res.status(200).json({
+            message: 'success',
+            formulations: paginatedFormulations,
+            pagination: {
+                totalSize: totalCount,
+                totalPages: Math.ceil(totalCount / limit),
+                pageSize: paginatedFormulations.length,
+                page: Math.floor(skip / limit) + 1,
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message, message: 'error' })
+    }
+};
+
+const getAllSpecialFormulations = async (req, res) => {
+    const { animalgroup } = req.params;
+    const { skip=0, limit=8 } = req.query;
+
+    try {
+        // only show formulations where the user is part of the collaborators
+        const formulations = await SpecialFormulation.find({'animal_group': animalgroup}).select('code name description animal_group collaborators createdAt');
+        // aside from the basic details, return the access level of the user
+        // const filteredFormulations = formulations.map(formulation => {
+        //     const access = formulation.collaborators.find(c => c.userId.toString() === collaboratorId)?.access;
+        //     return {
+        //         "_id": formulation._id,
+        //         "code": formulation.code,
+        //         "name": formulation.name,
+        //         "description": formulation.description ? formulation.description : "",
+        //         "animal_group": formulation.animal_group ? formulation.animal_group : "",
+        //         "access": access,
+        //         "createdAt": formulation.createdAt
+        //     }
+        // })
+
+        // pagination
+        const totalCount = formulations.length;
+        const paginatedFormulations = formulations.slice(skip, skip + limit);
 
         res.status(200).json({
             message: 'success',
@@ -417,6 +458,7 @@ const removeCollaborator = async (req,res) => {
 export {
     createFormulation,
     getAllFormulations,
+    getAllSpecialFormulations,
     getFormulation,
     getFormulationByFilters,
     updateFormulation,
