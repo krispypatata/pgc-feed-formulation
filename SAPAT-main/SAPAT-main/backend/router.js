@@ -3,6 +3,7 @@ import { getUserById, getUserByEmail } from './controller/user-controller.js';
 import {
   createFormulation,
   getAllFormulations,
+  getAllSpecialFormulations,
   getFormulation,
   getFormulationByFilters,
   updateFormulation,
@@ -83,6 +84,7 @@ const handleRoutes = (app) => {
 
   app.post('/formulation', createFormulation);
   app.get('/formulation/filtered/:collaboratorId', getAllFormulations);
+  app.get('/formulation/filtered/:animalgroup', getAllSpecialFormulations);
   app.get('/formulation/:id', getFormulation);
   app.get('/formulation/filtered/search/:userId', getFormulationByFilters);
   app.put('/formulation/:id', updateFormulation);

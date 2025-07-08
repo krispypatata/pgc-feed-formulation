@@ -96,6 +96,9 @@ function EditFormulationModal({
       id="edit_formulation_modal"
       className={`modal ${isOpen ? 'modal-open' : ''}`}
     >
+      <div className='text-5xl'>
+        BIG HELLO
+      </div>
       <div className="modal-box relative mt-[64px] w-11/12 max-w-2xl rounded-3xl bg-white md:mt-0">
         {/* Close button */}
         <button
