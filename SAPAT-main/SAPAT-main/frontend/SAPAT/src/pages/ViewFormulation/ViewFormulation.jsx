@@ -21,6 +21,7 @@ import ChooseNutrientRatiosModal from '../../components/modals/viewformulation/C
 import Warning from '../../components/icons/Warning.jsx'
 import GenerateReport from '../../components/buttons/GenerateReport.jsx'
 import { set } from 'lodash'
+import ShadowPricingTab from '../../components/modals/viewformulation/ShadowPricingTab.jsx'
 
 const COLORS = ['#DC2626', '#D97706', '#059669', '#7C3AED', '#DB2777']
 
@@ -81,6 +82,7 @@ function ViewFormulation({
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [selectedNutrients, setSelectedNutrients] = useState([])
 
+  const [shadowPricingTabOpen, setShadowPricingTabOpen ]= useState(false);
   // un-updated ingredient/nutrient values (when user enters new min/max that has not been optimized yet)
   const [isDirty, setIsDirty] = useState(false)
 
@@ -854,6 +856,8 @@ function ViewFormulation({
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2">
               {/* Optimize */}
+
+              
               <div className={`${isDisabled ? '' : 'dropdown dropdown-hover'}`}>
                 <div
                   tabIndex={isDisabled ? -1 : 0}
@@ -913,6 +917,21 @@ function ViewFormulation({
                 owner={owner}
                 weight={weight}
               />
+              <div className='flex items-center justify-end gap-1 pr-2'>
+              
+              <button
+                className="btn border border-gray-400 btn-sm gap-2 rounded-lg text-xs"
+                onClick={() => setShadowPricingTabOpen(true)}
+                disabled={isDisabled}
+              >
+                See Shadow Prices
+              </button>
+              <ShadowPricingTab
+                isOpen={shadowPricingTabOpen}
+                onClose={() => setShadowPricingTabOpen(false)}
+                formulation={formulationRealTime}
+              />
+              </div>
             </div>
             {/*<div className="flex flex-wrap gap-2">*/}
             {/*  <button*/}
@@ -974,7 +993,7 @@ function ViewFormulation({
           )}
 
           {/* Form Fields - Grid on desktop, Stack on mobile */}
-          <div className={`grid grid-cols-1 gap-4 md:grid-cols-5`}>
+          <div className={`grid grid-cols-1 gap-4 ${animal_group=="Water Buffalo"? "md:grid-cols-6": "md:grid-cols-5"}`}>
             <div>
               <label className="label text-sm font-medium">Code</label>
               <input
@@ -1040,14 +1059,8 @@ function ViewFormulation({
               </select>
               <Selections id="input-animal_group" others={others} />
             </div>
-
-            
-          </div>
-          
-          {/* This is where you place your Gestational Phases */}
-
-          {animal_group === 'Water Buffalo' && (
-          <div className={`grid grid-cols-1 gap-4 md:grid-cols-5`}>
+            {animal_group === 'Water Buffalo' && (
+          <div className={``}>
             <div className="">
                 <label className="label text-sm font-medium text-black">{animal_group} Phase</label>
                 <div>
@@ -1075,6 +1088,13 @@ function ViewFormulation({
                 </div>
                 </div>
                 )}
+
+            
+          </div>
+          
+          {/* This is where you place your Gestational Phases */}
+
+          
                 
                 {/* Tables - Grid on desktop, Stack on mobile */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1179,6 +1199,7 @@ function ViewFormulation({
           </div>
           <div className="flex flex-wrap justify-end gap-2 px-4 pb-5">
             {/* Target Amount */}
+            
             <div className="flex items-center justify-end gap-1 pr-2">
               <span className="text-sm font-medium text-gray-600">
                 Target amount (kg):
@@ -1217,6 +1238,7 @@ function ViewFormulation({
                 ₱ {cost && cost.toFixed(2)}
               </span>
             </div>
+            
           </div>
         </div>
       </div>
@@ -1244,6 +1266,12 @@ function ViewFormulation({
           </>
         }
         type="add"
+      />
+
+      <ShadowPricingTab
+        open={shadowPricingTabOpen}
+        onClose={()=>setShadowPricingTabOpen(false)}
+        data = {[]}
       />
 
       <ChooseIngredientsModal
