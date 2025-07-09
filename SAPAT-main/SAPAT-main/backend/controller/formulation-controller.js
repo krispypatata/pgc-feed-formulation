@@ -69,8 +69,9 @@ const getAllSpecialFormulations = async (req, res) => {
     const { skip=0, limit=8 } = req.query;
 
     try {
+        // console.log("SHOWING SPECIAL FORMULATIONS")
         // only show formulations where the user is part of the collaborators
-        const formulations = await SpecialFormulation.find({'animal_group': animalgroup}).select('code name description animal_group collaborators createdAt');
+        const formulations = await SpecialFormulation.find({'animal_group': animalgroup}).select('code name description animal_group collaborators createdAt ingredients nutrients');
         // aside from the basic details, return the access level of the user
         // const filteredFormulations = formulations.map(formulation => {
         //     const access = formulation.collaborators.find(c => c.userId.toString() === collaboratorId)?.access;

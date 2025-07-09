@@ -4,6 +4,7 @@ import {
   RiCalculatorLine,
   RiDeleteBinLine,
   RiSave2Line,
+  RiPencilLine,
 } from 'react-icons/ri'
 import Info from '../../components/icons/Info.jsx'
 import { useState, useEffect } from 'react'
@@ -16,8 +17,11 @@ import Avatar from '../../components/Avatar.jsx'
 import Selection from '../../components/Selection.jsx'
 import ChooseIngredientsModal from '../../components/modals/viewformulation/ChooseIngredientsModal.jsx'
 import ChooseNutrientsModal from '../../components/modals/viewformulation/ChooseNutrientsModal.jsx'
+import ChooseNutrientRatiosModal from '../../components/modals/viewformulation/ChooseNutrientRatiosModal.jsx'
 import Warning from '../../components/icons/Warning.jsx'
 import GenerateReport from '../../components/buttons/GenerateReport.jsx'
+import { set } from 'lodash'
+
 const COLORS = ['#DC2626', '#D97706', '#059669', '#7C3AED', '#DB2777']
 
 function ViewFormulation({
@@ -41,6 +45,7 @@ function ViewFormulation({
   updateIngredientProperty,
   updateNutrientProperty,
   handleSave,
+  specialformulations,
 }) {
   const VITE_API_URL = import.meta.env.VITE_API_URL
 
@@ -68,6 +73,8 @@ function ViewFormulation({
   const [isChooseIngredientsModalOpen, setIsChooseIngredientsModalOpen] =
     useState(false)
   const [isChooseNutrientsModalOpen, setIsChooseNutrientsModalOpen] =
+    useState(false)
+  const [isChooseNutrientRatiosModalOpen, setIsChooseNutrientRatiosModalOpen] =
     useState(false)
 
   // chosen ingredients and nutrients
@@ -138,18 +145,16 @@ function ViewFormulation({
     }
   }, [isDirty])
 
-  const fetchIngredients = async () => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/ingredient/filtered/${owner?.userId}?limit=10000`
-      )
-      const fetchedData = res.data.ingredients
+  // Function to organize ingredients for Ingredients Menu
+  const organizeIngredients = (fetchedData, phase) => {
       setListOfIngredients(fetchedData)
-
-      // ingredients already in the formulation
+      
       const arr2Ids = new Set(
-        formulation.ingredients.map((item) => item.ingredient_id)
+        phase === 'Custom' ?
+          formulation.ingredients.map((item) => item.ingredient_id)
+          : specialformulations.find((sf) => sf.name === phase)?.ingredients.map((item) => item.ingredient_id)
       )
+
       // don't include already added ingredients to the ingredients menu
       const unusedIngredients = fetchedData.filter(
         (item) => !arr2Ids.has(item.ingredient_id || item._id)
@@ -170,22 +175,14 @@ function ViewFormulation({
           (item) => !nonExistingIngredientsIds.has(item.ingredient_id)
         )
       )
-    } catch (err) {
-      console.log(err)
-    }
   }
 
-
-  const fetchNutrients = async () => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/nutrient/filtered/${owner?.userId}?limit=10000`
-      )
-      const fetchedData = res.data.nutrients
-      setListOfNutrients(fetchedData)
-      // nutrients already in the formulation
+  const organizeNutrients = (fetchedData, phase) => {
+    // nutrients already in the formulation
       const arr2Ids = new Set(
-        formulation.nutrients.map((item) => item.nutrient_id)
+        phase === 'Custom' ?
+          formulation.nutrients.map((item) => item.nutrient_id)
+          : specialformulations.find((sf) => sf.name === phase)?.nutrients.map((item) => item.nutrient_id)
       )
       // don't include already added nutrients to the nutrients menu
       const unusedNutrients = fetchedData.filter(
@@ -207,6 +204,28 @@ function ViewFormulation({
           (item) => !nonExistingNutrientsIds.has(item.nutrient_id)
         )
       )
+  }
+  const fetchIngredients = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/ingredient/filtered/${owner?.userId}?limit=10000`
+      )
+      const fetchedData = res.data.ingredients
+      organizeIngredients(fetchedData, 'Custom')
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+
+  const fetchNutrients = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/nutrient/filtered/${owner?.userId}?limit=10000`
+      )
+      const fetchedData = res.data.nutrients
+      setListOfNutrients(fetchedData)
+      organizeNutrients(fetchedData, 'Custom')
     } catch (err) {
       console.log(err)
     }
@@ -707,7 +726,99 @@ function ViewFormulation({
       ))
     }
   }
+
+  // Render function for Nutrient Ratios table rows
+  const renderNutrientRatiosTableRows = () => {
+    if (formulationRatioConstraintSamples) {
+      return formulationRatioConstraintSamples.nutrientRatioConstraints.map((nutrient, index) => (
+        <tr key={index} className="hover:bg-base-300">
+          <td>{nutrient.firstIngredient}</td>
+          <td>{nutrient.firstIngredientRatio}:{nutrient.secondIngredientRatio}</td>
+          <td>{nutrient.secondIngredient}</td>
+          <td><button className='btn btn-ghost btn-xs text-deepbrown hover:bg-deepbrown/10  items-center gap-1'
+          
+          disabled={isDisabled}
+          onClick={() => {setIsChooseNutrientRatiosModalOpen(true); setNutrientRatioModifyType('Edit')}}
+          >
+            
+            
+            <RiPencilLine className='h-4 w-4 text-deepbrown'/>
+            </button></td>
+          <td>
+            <button
+              disabled={isDisabled}
+              className={`${isDisabled ? 'hidden' : ''} btn btn-ghost btn-xs text-red-500 hover:bg-red-200`}
+              // onClick={() => handleRemoveNutrient(nutrient)}
+            >
+              <RiDeleteBinLine />
+            </button>
+          </td>
+        </tr>
+      ))
+    }
+  }
   const [phase, setPhase] = useState('Custom');
+
+  const ChangeFormulationByPhase = (phase) => {
+    
+    setPhase(phase);
+    if (phase === 'Custom') {
+      // Custom phase logic
+      updateWeight(formulation.weight);
+      updateCost(formulation.cost);
+      organizeIngredients(listOfIngredients, phase)
+      organizeNutrients(listOfNutrients, phase)
+      updateIngredients(formulation.ingredients || []);
+      updateNutrients(formulation.nutrients || []);
+      ;
+    } else {
+      const selectedPhase = specialformulations.find(sf => sf.name === phase);
+      if (selectedPhase) {
+        // Update the formulation with the selected phase data
+        updateWeight(selectedPhase.weight);
+        updateCost(selectedPhase.cost);
+        organizeIngredients(listOfIngredients, phase)
+        organizeNutrients(listOfNutrients, phase)
+        updateIngredients(selectedPhase.ingredients || []);
+        updateNutrients(selectedPhase.nutrients || []);
+        ;
+      }
+    }
+  }
+
+  const [formulationRatioConstraintSamples, setFormulationRatioConstraintSamples] = useState({
+        id: 1,
+        name: "Starter Feed",
+        ingredients: [
+            { name: "Corn", percentage: 50 },
+            { name: "Soybean Meal", percentage: 30 },
+            { name: "Fish Meal", percentage: 10 },
+            { name: "Premix", percentage: 10 }
+        ],
+        nutrientConstraints: {
+            protein: { min: 20, max: 24 },
+            fat: { min: 3, max: 5 },
+            fiber: { min: 2, max: 5 },
+            calcium: { min: 0.8, max: 1.2 },
+            phosphorus: { min: 0.4, max: 0.6 }
+        },
+        nutrientRatioConstraints: [
+            {
+                firstIngredient: "Protein",
+                secondIngredient: "Fat",
+                firstIngredientRatio: 2,
+                secondIngredientRatio: 1
+            },
+            {
+                firstIngredient: "Calcium",
+                secondIngredient: "Phosphorus",
+                firstIngredientRatio: 3,
+                secondIngredientRatio: 2
+            },// calcium:phosphorus = 3:2
+        ]
+    });
+  const [nutrientRatioModifyType, setNutrientRatioModifyType] = useState('add');
+
   // loading due to api calls
   if (isLoading || formulation.length === 0 || !owner) {
     return <Loading />
@@ -943,20 +1054,29 @@ function ViewFormulation({
                   <select
                     className="select select-bordered w-full rounded-xl bg-white"
                     value={phase}
-                    onChange={(e) => setPhase(e.target.value)}
+                    onChange={(e) => ChangeFormulationByPhase(e.target.value)}
                     // disabled={isDisabled}
-                  >
-                    <option value="Gestational Phase">Gestational Phase</option>
-                    <option value="Normal Phase">Normal Phase</option>
-                    <option value="Lactating Phase">Lactating Phase</option>
-                    <option value="Custom">Custom</option>
-                  </select>
+                    >
+                    {specialformulations && specialformulations.length > 0 ? (
+                      <>
+                      {specialformulations.map((sf, idx) => (
+                      <option key={idx} value={sf.name}>
+                        {sf.name}
+                      </option>
+                      ))}
+                      <option value="Custom">Custom</option>
+                      </>
+                      
+                    ) : (
+                      <option value="Custom">Custom</option>
+                    )}
+                    </select>
+                  </div>
                 </div>
-            </div>
-          </div>
-          )}
-            
-          {/* Tables - Grid on desktop, Stack on mobile */}
+                </div>
+                )}
+                
+                {/* Tables - Grid on desktop, Stack on mobile */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Ingredients Table */}
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -1025,8 +1145,39 @@ function ViewFormulation({
               </div>
             </div>
           </div>
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+              <div className="p-4">
+                <h3 className="mb-2 text-sm font-semibold">Nutrient Ratio</h3>
+                <p className="flex text-xs text-gray-500">
+                  <Info /> Nutrient Constraint where you can force a nutrient to be x times more than another ingredient.
+                </p>
+              </div>
 
-          <div className="flex flex-wrap justify-end gap-2 px-4">
+              <div className="p-4">
+                <div className="max-h-64 overflow-x-auto overflow-y-auto">
+                <table className="table-sm table-pin-rows table w-full">
+                  <thead>
+                    <tr>
+                      <th>Ingredient1</th>
+                      <th>Ratio</th>
+                      <th>Ingredient2</th>
+                      
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>{renderNutrientRatiosTableRows()}</tbody>
+                </table>
+              </div>
+                <button
+                  disabled={isDisabled}
+                  onClick={() => {setIsChooseNutrientRatiosModalOpen(true); setNutrientRatioModifyType('Add')}}
+                  className="bg-green-button flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 mt-4 text-sm text-white transition-colors hover:bg-green-600 active:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  <RiAddLine /> Add Nutrient Ratio
+                </button>
+              </div>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2 px-4 pb-5">
             {/* Target Amount */}
             <div className="flex items-center justify-end gap-1 pr-2">
               <span className="text-sm font-medium text-gray-600">
@@ -1106,6 +1257,16 @@ function ViewFormulation({
         onClose={() => setIsChooseNutrientsModalOpen(false)}
         nutrients={nutrientsMenu}
         onResult={handleAddNutrients}
+      />
+
+      <ChooseNutrientRatiosModal
+        isOpen={isChooseNutrientRatiosModalOpen}
+        onClose={() => setIsChooseNutrientRatiosModalOpen(false)}
+        nutrients={nutrientsMenu}
+        onResult={handleAddNutrients}
+        formulationRatioConstraintSamples={formulationRatioConstraintSamples}
+        setFormulationRatioConstraintSamples={setFormulationRatioConstraintSamples}
+        type={nutrientRatioModifyType}
       />
 
       {/*  Toasts */}
