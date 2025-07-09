@@ -14,6 +14,7 @@ import useAuth from '../../hook/useAuth.js'
 import Loading from '../../components/Loading.jsx'
 import ViewFormulation from './ViewFormulation.jsx'
 import Toast from '../../components/Toast.jsx'
+import { set } from 'lodash'
 
 function ViewFormulationEntry({ id }) {
   const VITE_API_URL = import.meta.env.VITE_API_URL
@@ -24,6 +25,9 @@ function ViewFormulationEntry({ id }) {
   const updateMyPresence = useUpdateMyPresence()
 
   const formulationRealTime = useStorage((root) => root.formulation)
+
+  // special formulation based on animal group
+  const [specialformulations, setSpecialFormulations] = useState([]);
 
   const updateWeight = useMutation(({ storage }, weight) => {
     storage.get('formulation').set('weight', weight)
@@ -117,6 +121,17 @@ function ViewFormulationEntry({ id }) {
       checkAccess()
     }
   }, [user])
+  
+
+  const fetchspecialformulations = async (animal_group) => {
+        try {
+          const res = await axios.get(`${VITE_API_URL}/formulation/special/${animal_group}`)
+          setSpecialFormulations(res.data.formulations)
+          console.log('Special formulations fetched:', res.data)
+        } catch (error) {
+          console.error('Error fetching special formulations:', error)
+        }
+      }
 
   const fetchFormulationData = async () => {
     try {
@@ -132,6 +147,7 @@ function ViewFormulationEntry({ id }) {
         updateCost(formulationData.cost)
         updateIngredients(formulationData.ingredients)
         updateNutrients(formulationData.nutrients)
+        fetchspecialformulations(formulationData.animal_group) // Fetch special formulations based on animal group
       }
       // set owner id
       const owner = formulationData?.collaborators?.find((collaborator) => collaborator.access === "owner")
@@ -224,6 +240,7 @@ function ViewFormulationEntry({ id }) {
         updateIngredientProperty={updateIngredientProperty}
         updateNutrientProperty={updateNutrientProperty}
         handleSave={updateDatabase}
+        specialformulations={specialformulations}
       />
       {/*  Toasts */}
       <Toast
