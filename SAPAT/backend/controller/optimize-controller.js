@@ -155,11 +155,17 @@ const simplex = async (req, res) => {
       }
     };
 
+    // Map of constraints code (e.g., c0, c1) to make result from GLPK readable
+    // especially for retrieving dual values (shadow prices)
+    const constraintsMap = {};
     // format the constraints to be used in the optimization
     const subjects = [];
     for (let i = 0; i < constraints.length; i++) {
+      const constraintCode = 'c' + i;
+      constraintsMap[constraintCode] = constraints[i].name; // Added for shadow price retrieval
+
       subjects.push({
-        name: 'c' + i,
+        name: constraintCode,
         vars: constraints[i].vars,  // variables
         // sample: [{ name: 'x1', coef: 1.0 }, { name: 'x2', coef: 2.0 }],
         bnds: constraints[i].bnds   // bounds
@@ -202,6 +208,11 @@ const simplex = async (req, res) => {
     // Check if the result has an optimal solution
     if (output.result.status == glpk.GLP_OPT) {
       console.log("optimal found!")
+
+      console.log("DEBBBUUG HEREEEEEEEEEEEEEEEEEEEEEEEEEE")
+      console.log("optimize-controller.js")
+      console.log(output)
+
       // determine the optimized nutrients
       const optimizedNutrients = determineOptimizedNutrients(output.result.vars, constraints);
       // reformat ingredients to be used in the response (make it an array of objects)
@@ -215,6 +226,14 @@ const simplex = async (req, res) => {
 
       const finalCost = computeCost(optimizedIngredients, objectives, weight);
 
+      // Retrieval of shadow prices (dual values from result/output)
+      const shadowPrices = Object.entries(output.result.dual).map(([key, value]) => {
+        return {
+          constraint: constraintsMap[key] || key,
+          shadowPrice: value
+        };
+      });
+
       // Return the solution values
       res.status(200).json({
         status: 'Optimal solution found',
@@ -223,7 +242,8 @@ const simplex = async (req, res) => {
         // variableBounds: variableBounds,
         optimizedCost: finalCost, // output.result.z,
         optimizedIngredients: optimizedIngredients,
-        optimizedNutrients: optimizedNutrients
+        optimizedNutrients: optimizedNutrients,
+        shadowPrices: shadowPrices,
       });
     } else {
       console.log("optimal not found!");
