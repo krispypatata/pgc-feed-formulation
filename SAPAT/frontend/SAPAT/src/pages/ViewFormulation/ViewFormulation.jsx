@@ -82,7 +82,10 @@ function ViewFormulation({
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [selectedNutrients, setSelectedNutrients] = useState([])
 
+  // Shadow prices (for simplex optimization)
   const [shadowPricingTabOpen, setShadowPricingTabOpen ]= useState(false);
+  const [shadowPrices, setShadowPrices] = useState([]);
+
   // un-updated ingredient/nutrient values (when user enters new min/max that has not been optimized yet)
   const [isDirty, setIsDirty] = useState(false)
 
@@ -303,9 +306,14 @@ function ViewFormulation({
         nutrients,
         weight
       })
+      console.log(res.data) // View Optimization results
       const optimizedCost = res.data.optimizedCost
       const optimizedIngredients = res.data.optimizedIngredients
       const optimizedNutrients = res.data.optimizedNutrients
+      const shadowPrices = res.data.shadowPrices
+
+      // Update shadow prices in local state
+      setShadowPrices(shadowPrices || []);
 
       updateCost(optimizedCost)
       optimizedIngredients.map((ing, index) => {
@@ -929,7 +937,8 @@ function ViewFormulation({
               <ShadowPricingTab
                 isOpen={shadowPricingTabOpen}
                 onClose={() => setShadowPricingTabOpen(false)}
-                formulation={formulationRealTime}
+                // formulation={formulationRealTime}
+                data={shadowPrices}
               />
               </div>
             </div>
@@ -1271,7 +1280,7 @@ function ViewFormulation({
       <ShadowPricingTab
         open={shadowPricingTabOpen}
         onClose={()=>setShadowPricingTabOpen(false)}
-        data = {[]}
+        data={shadowPrices}
       />
 
       <ChooseIngredientsModal

@@ -164,6 +164,8 @@ const simplex = async (req, res) => {
       const constraintCode = 'c' + i;
       constraintsMap[constraintCode] = constraints[i].name; // Added for shadow price retrieval
 
+      console.log("=======================================DEBUG HERE=======================================")
+      console.log(constraints[i].name);
       subjects.push({
         name: constraintCode,
         vars: constraints[i].vars,  // variables
@@ -209,7 +211,7 @@ const simplex = async (req, res) => {
     if (output.result.status == glpk.GLP_OPT) {
       console.log("optimal found!")
 
-      console.log("DEBBBUUG HEREEEEEEEEEEEEEEEEEEEEEEEEEE")
+      console.log("=======================================DEBUG HERE=======================================")
       console.log("optimize-controller.js")
       console.log(output)
 
