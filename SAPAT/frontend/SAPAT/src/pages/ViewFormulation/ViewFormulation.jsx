@@ -46,12 +46,14 @@ function ViewFormulation({
   updateNutrientProperty,
   handleSave,
   specialformulations,
-  updateShadowPrices, // new prop
-  shadowPrices, // new prop
-  nutrientsMenu, // from Liveblocks
-  updateNutrientsMenu, // mutation from Liveblocks
-  ingredientsMenu, // from Liveblocks
-  updateIngredientsMenu, // mutation from Liveblocks
+  updateShadowPrices,
+  shadowPrices, 
+  nutrientsMenu,
+  updateNutrientsMenu,
+  ingredientsMenu, 
+  updateIngredientsMenu,
+  nutrientRatioConstraints,
+  updateNutrientRatioConstraints,
 }) {
   const VITE_API_URL = import.meta.env.VITE_API_URL
 
@@ -736,8 +738,8 @@ function ViewFormulation({
 
   // Render function for Nutrient Ratios table rows
   const renderNutrientRatiosTableRows = () => {
-    if (formulationRatioConstraintSamples) {
-      return formulationRatioConstraintSamples.nutrientRatioConstraints.map((nutrient, index) => (
+    if (nutrientRatioConstraints) {
+      return nutrientRatioConstraints.map((nutrient, index) => (
         <tr key={index} className="hover:bg-base-300">
           <td className="w-1/5">{nutrient.firstIngredient}</td>
           <td className="w-1/5">{nutrient.secondIngredient}</td>
@@ -747,14 +749,14 @@ function ViewFormulation({
             <div className="flex items-center justify-center gap-2">
               <button className='btn btn-ghost btn-xs text-deepbrown hover:bg-deepbrown/10 items-center gap-1'
                 disabled={isDisabled}
-                onClick={() => {setIsChooseNutrientRatiosModalOpen(true); setNutrientRatioModifyType('Edit')}}
+                onClick={() => handleEditNutrientRatio(index)}
               >
                 <RiPencilLine className='h-4 w-4 text-deepbrown'/>
               </button>
               <button
                 disabled={isDisabled}
                 className={`${isDisabled ? 'hidden' : ''} btn btn-ghost btn-xs text-red-500 hover:bg-red-200 ml-1`}
-                // onClick={() => handleRemoveNutrient(nutrient)}
+                onClick={() => handleDeleteNutrientRatio(index)}
               >
                 <RiDeleteBinLine />
               </button>
@@ -793,7 +795,9 @@ function ViewFormulation({
     }
   }
 
-  const [formulationRatioConstraintSamples, setFormulationRatioConstraintSamples] = useState({
+  // Dummy data for future testing (not used in UI)
+  // eslint-disable-next-line no-unused-vars
+  const dummyNutrientRatioConstraintSamples = {
     id: 1,
     name: "Starter Feed",
     ingredients: [
@@ -825,8 +829,33 @@ function ViewFormulation({
         secondIngredientRatio: 2
       },
     ]
-  });
+  };
   const [nutrientRatioModifyType, setNutrientRatioModifyType] = useState('add');
+  const [editingNutrientRatioIndex, setEditingNutrientRatioIndex] = useState(null); // NEW: track which ratio is being edited
+  const [nutrientRatioToEdit, setNutrientRatioToEdit] = useState(null); // NEW: store the ratio being edited
+
+  // Handler to open modal for editing a nutrient ratio
+  const handleEditNutrientRatio = (index) => {
+    setEditingNutrientRatioIndex(index);
+    setNutrientRatioToEdit(nutrientRatioConstraints[index]);
+    setNutrientRatioModifyType('Edit');
+    setIsChooseNutrientRatiosModalOpen(true);
+  };
+
+  // Handler to update a nutrient ratio in the list
+  const handleUpdateNutrientRatio = (updatedRatio) => {
+    const updatedConstraints = [...nutrientRatioConstraints];
+    updatedConstraints[editingNutrientRatioIndex] = updatedRatio;
+    updateNutrientRatioConstraints(updatedConstraints);
+    setEditingNutrientRatioIndex(null);
+    setNutrientRatioToEdit(null);
+  };
+
+  // Handler to delete a nutrient ratio
+  const handleDeleteNutrientRatio = (index) => {
+    const updatedConstraints = nutrientRatioConstraints.filter((_, i) => i !== index);
+    updateNutrientRatioConstraints(updatedConstraints);
+  };
 
   // loading due to api calls
   if (isLoading || formulation.length === 0 || !owner) {
@@ -1298,13 +1327,20 @@ function ViewFormulation({
 
       <ChooseNutrientRatiosModal
         isOpen={isChooseNutrientRatiosModalOpen}
-        onClose={() => setIsChooseNutrientRatiosModalOpen(false)}
+        onClose={() => {
+          setIsChooseNutrientRatiosModalOpen(false);
+          setEditingNutrientRatioIndex(null);
+          setNutrientRatioToEdit(null);
+        }}
         nutrients={nutrients}
         allNutrients={listOfNutrients}
-        onResult={handleAddNutrients}
-        formulationRatioConstraintSamples={formulationRatioConstraintSamples}
-        setFormulationRatioConstraintSamples={setFormulationRatioConstraintSamples}
+        onResult={(newRatio) => {
+          // Add new nutrient ratio to the shared real-time data
+          updateNutrientRatioConstraints([...(nutrientRatioConstraints || []), newRatio]);
+        }}
+        onUpdate={handleUpdateNutrientRatio} // for edit mode
         type={nutrientRatioModifyType}
+        editingNutrientRatio={nutrientRatioToEdit}
       />
 
       {/*  Toasts */}

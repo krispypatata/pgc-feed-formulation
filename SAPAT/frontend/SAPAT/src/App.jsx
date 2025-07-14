@@ -58,6 +58,7 @@ function FormulationRoom() {
           shadowPrices: [],
           nutrientsMenu: [],
           ingredientsMenu: [],
+          nutrientRatioConstraints: [],
         }),
       }}
     >

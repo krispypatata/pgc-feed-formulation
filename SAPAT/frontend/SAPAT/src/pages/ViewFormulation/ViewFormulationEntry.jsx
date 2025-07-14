@@ -25,12 +25,16 @@ function ViewFormulationEntry({ id }) {
   const formulationRealTime = useStorage((root) => root.formulation)
   const nutrientsMenu = useStorage((root) => root.formulation?.nutrientsMenu || [])
   const ingredientsMenu = useStorage((root) => root.formulation?.ingredientsMenu || [])
+  const nutrientRatioConstraints = useStorage((root) => root.formulation?.nutrientRatioConstraints || [])
 
   const updateNutrientsMenu = useMutation(({ storage }, newMenu) => {
     storage.get('formulation').set('nutrientsMenu', newMenu)
   }, [])
   const updateIngredientsMenu = useMutation(({ storage }, newMenu) => {
     storage.get('formulation').set('ingredientsMenu', newMenu)
+  }, [])
+  const updateNutrientRatioConstraints = useMutation(({ storage }, newConstraints) => {
+    storage.get('formulation').set('nutrientRatioConstraints', newConstraints)
   }, [])
 
   // special formulation based on animal group
@@ -259,6 +263,8 @@ function ViewFormulationEntry({ id }) {
         updateNutrientsMenu={updateNutrientsMenu}
         ingredientsMenu={ingredientsMenu}
         updateIngredientsMenu={updateIngredientsMenu}
+        nutrientRatioConstraints={nutrientRatioConstraints}
+        updateNutrientRatioConstraints={updateNutrientRatioConstraints}
       />
       {/*  Toasts */}
       <Toast

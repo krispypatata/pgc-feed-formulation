@@ -7,8 +7,10 @@ function ChooseNutrientRatiosModal({
   onClose,
   nutrients,    // selected nutrients in the formulation
   allNutrients, // full nutrients info
-  setFormulationRatioConstraintSamples,
   type,
+  editingNutrientRatio,
+  onUpdate,
+  onResult,
 }) {
   const [showChooseNutrientsModal, setShowChooseNutrientsModal] = useState(false)
   const [nutrientRatio, setNutrientRatio] = useState({
@@ -21,6 +23,31 @@ function ChooseNutrientRatiosModal({
   })
   const [operator, setOperator] = useState('=')
   const [chooseType, setChooseType] = useState('first') // 'first' or 'second'
+
+  // If editing, pre-fill fields when modal opens
+  useEffect(() => {
+    if (isOpen && type === 'Edit' && editingNutrientRatio) {
+      setNutrientRatio({
+        firstIngredient: editingNutrientRatio.firstIngredient,
+        firstIngredientId: editingNutrientRatio.firstIngredientId,
+        firstIngredientRatio: editingNutrientRatio.firstIngredientRatio,
+        secondIngredient: editingNutrientRatio.secondIngredient,
+        secondIngredientId: editingNutrientRatio.secondIngredientId,
+        secondIngredientRatio: editingNutrientRatio.secondIngredientRatio,
+      });
+      setOperator(editingNutrientRatio.operator || '=');
+    } else if (isOpen && type === 'Add') {
+      setNutrientRatio({
+        firstIngredient: '',
+        firstIngredientId: '',
+        firstIngredientRatio: '',
+        secondIngredient: '',
+        secondIngredientId: '',
+        secondIngredientRatio: '',
+      });
+      setOperator('=');
+    }
+  }, [isOpen, type, editingNutrientRatio]);
 
   // Get selected nutrient IDs
   const firstNutrientId = nutrientRatio.firstIngredientId
@@ -61,10 +88,9 @@ function ChooseNutrientRatiosModal({
     setShowChooseNutrientsModal(false)
   }
 
-  // Handle Add button click
-  const handleAdd = () => {
-    if (!isAddEnabled) return
-    // Add the new ratio constraint to the list
+  // Handle Add or Update button click
+  const handleAddOrUpdate = () => {
+    if (!isAddEnabled) return;
     const newConstraint = {
       firstIngredient: nutrientRatio.firstIngredient,
       firstIngredientId: nutrientRatio.firstIngredientId,
@@ -73,14 +99,14 @@ function ChooseNutrientRatiosModal({
       secondIngredientId: nutrientRatio.secondIngredientId,
       secondIngredientRatio: Number(nutrientRatio.secondIngredientRatio),
       operator,
+    };
+    if (type === 'Edit' && onUpdate) {
+      onUpdate(newConstraint);
+      onClose();
+    } else if (onResult) {
+      onResult(newConstraint);
+      onClose();
     }
-    setFormulationRatioConstraintSamples((prev) => ({
-      ...prev,
-      nutrientRatioConstraints: [
-        ...(prev.nutrientRatioConstraints || []),
-        newConstraint,
-      ],
-    }))
     // Reset fields
     setNutrientRatio({
       firstIngredient: '',
@@ -89,10 +115,9 @@ function ChooseNutrientRatiosModal({
       secondIngredient: '',
       secondIngredientId: '',
       secondIngredientRatio: '',
-    })
-    setOperator('=')
-    onClose()
-  }
+    });
+    setOperator('=');
+  };
 
   return (
     <>
@@ -117,7 +142,7 @@ function ChooseNutrientRatiosModal({
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              handleAdd()
+              handleAddOrUpdate()
             }}
           >
             <div className="grid grid-cols-[auto_75px_100px] gap-4 mt-2">
@@ -126,7 +151,9 @@ function ChooseNutrientRatiosModal({
                 <input
                   className="input-bordered input flex w-full items-center justify-center rounded-xl text-black hover:cursor-pointer"
                   readOnly
-                  onClick={() => openChooseNutrientsModal('first')}
+                  disabled={type === 'Edit'}
+                  style={type === 'Edit' ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {}}
+                  onClick={type === 'Edit' ? undefined : () => openChooseNutrientsModal('first')}
                   value={nutrientRatio.firstIngredient}
                   placeholder="Select 1st Nutrient"
                 />
@@ -136,7 +163,9 @@ function ChooseNutrientRatiosModal({
                 <input
                   className="input-bordered input flex w-full items-center justify-center rounded-xl text-black hover:cursor-pointer"
                   readOnly
-                  onClick={() => openChooseNutrientsModal('second')}
+                  disabled={type === 'Edit'}
+                  style={type === 'Edit' ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {}}
+                  onClick={type === 'Edit' ? undefined : () => openChooseNutrientsModal('second')}
                   value={nutrientRatio.secondIngredient}
                   placeholder="Select 2nd Nutrient"
                 />
@@ -202,7 +231,7 @@ function ChooseNutrientRatiosModal({
                 className="btn bg-green-button rounded-xl px-8 text-white hover:bg-green-600"
                 disabled={!isAddEnabled}
               >
-                Add
+                {type === 'Edit' ? 'Update' : 'Add'}
               </button>
             </div>
           </form>
