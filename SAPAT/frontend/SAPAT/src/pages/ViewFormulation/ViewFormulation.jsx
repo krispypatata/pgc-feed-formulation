@@ -536,6 +536,15 @@ function ViewFormulation({
       if (removedNutrient) {
         updateNutrientsMenu([removedNutrient, ...nutrientsMenu])
       }
+      // Remove any nutrient ratio constraints that has this particular nutrient (real-time update)
+      const filteredConstraints = (nutrientRatioConstraints || []).filter(
+        (constraint) =>
+          constraint.firstIngredientId !== nutrientToRemove.nutrient_id &&
+          constraint.secondIngredientId !== nutrientToRemove.nutrient_id
+      )
+      if (filteredConstraints.length !== (nutrientRatioConstraints || []).length) {
+        updateNutrientRatioConstraints(filteredConstraints)
+      }
       updateCost(0)
       setIsDirty(false)
       // toast instructions
