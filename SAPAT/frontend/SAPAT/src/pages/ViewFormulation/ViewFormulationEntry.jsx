@@ -25,6 +25,11 @@ function ViewFormulationEntry({ id }) {
   const updateMyPresence = useUpdateMyPresence()
 
   const formulationRealTime = useStorage((root) => root.formulation)
+  const nutrientsMenu = useStorage((root) => root.formulation?.nutrientsMenu || [])
+
+  const updateNutrientsMenu = useMutation(({ storage }, newMenu) => {
+    storage.get('formulation').set('nutrientsMenu', newMenu)
+  }, [])
 
   // special formulation based on animal group
   const [specialformulations, setSpecialFormulations] = useState([]);
@@ -248,6 +253,8 @@ function ViewFormulationEntry({ id }) {
         specialformulations={specialformulations}
         updateShadowPrices={updateShadowPrices}
         shadowPrices={formulationRealTime?.shadowPrices || []}
+        nutrientsMenu={nutrientsMenu}
+        updateNutrientsMenu={updateNutrientsMenu}
       />
       {/*  Toasts */}
       <Toast

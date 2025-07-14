@@ -56,6 +56,7 @@ function FormulationRoom() {
           description: '',
           animal_group: '',
           shadowPrices: [],
+          nutrientsMenu: [],
         }),
       }}
     >

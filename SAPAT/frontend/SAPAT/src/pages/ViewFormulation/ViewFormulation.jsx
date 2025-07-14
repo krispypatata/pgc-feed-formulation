@@ -20,7 +20,6 @@ import ChooseNutrientsModal from '../../components/modals/viewformulation/Choose
 import ChooseNutrientRatiosModal from '../../components/modals/viewformulation/ChooseNutrientRatiosModal.jsx'
 import Warning from '../../components/icons/Warning.jsx'
 import GenerateReport from '../../components/buttons/GenerateReport.jsx'
-import { set } from 'lodash'
 import ShadowPricingTab from '../../components/modals/viewformulation/ShadowPricingTab.jsx'
 
 const COLORS = ['#DC2626', '#D97706', '#059669', '#7C3AED', '#DB2777']
@@ -49,6 +48,8 @@ function ViewFormulation({
   specialformulations,
   updateShadowPrices, // new prop
   shadowPrices, // new prop
+  nutrientsMenu, // from Liveblocks
+  updateNutrientsMenu, // mutation from Liveblocks
 }) {
   const VITE_API_URL = import.meta.env.VITE_API_URL
 
@@ -72,7 +73,6 @@ function ViewFormulation({
 
   // choosing ingredients and nutrients to create feeds
   const [ingredientsMenu, setIngredientsMenu] = useState([])
-  const [nutrientsMenu, setNutrientsMenu] = useState([])
   const [isChooseIngredientsModalOpen, setIsChooseIngredientsModalOpen] =
     useState(false)
   const [isChooseNutrientsModalOpen, setIsChooseNutrientsModalOpen] =
@@ -194,7 +194,7 @@ function ViewFormulation({
       const unusedNutrients = fetchedData.filter(
         (item) => !arr2Ids.has(item.nutrient_id || item._id)
       )
-      setNutrientsMenu(unusedNutrients)
+      updateNutrientsMenu(unusedNutrients)
 
       // nutrients in the user's workspace
       const listOfNutrientsIds = new Set(
@@ -452,9 +452,7 @@ function ViewFormulation({
       const arr2Ids = new Set(
         formattedNutrients.map((item) => item.nutrient_id)
       )
-      setNutrientsMenu((prev) =>
-        prev.filter((item) => !arr2Ids.has(item.nutrient_id || item._id))
-      )
+      updateNutrientsMenu(nutrientsMenu.filter((item) => !arr2Ids.has(item.nutrient_id || item._id)))
       updateCost(0)
       updateNutrients([...selectedNutrients, ...formattedNutrients])
       setIsChooseNutrientsModalOpen(false)
@@ -535,7 +533,7 @@ function ViewFormulation({
           : item._id === nutrientToRemove.nutrient_id
       )
       if (removedNutrient) {
-        setNutrientsMenu([removedNutrient, ...nutrientsMenu])
+        updateNutrientsMenu([removedNutrient, ...nutrientsMenu])
       }
       updateCost(0)
       setIsDirty(false)
