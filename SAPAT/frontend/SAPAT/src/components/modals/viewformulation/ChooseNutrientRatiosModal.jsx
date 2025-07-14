@@ -164,7 +164,7 @@ function ChooseNutrientRatiosModal({
                 // disabled={checkedNutrients.length === 0}
                 onClick={onClose}
               >
-                Add
+                {type}
               </button>
             </div>
           </form>

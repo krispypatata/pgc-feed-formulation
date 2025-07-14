@@ -742,26 +742,26 @@ function ViewFormulation({
     if (formulationRatioConstraintSamples) {
       return formulationRatioConstraintSamples.nutrientRatioConstraints.map((nutrient, index) => (
         <tr key={index} className="hover:bg-base-300">
-          <td>{nutrient.firstIngredient}</td>
-          <td>{nutrient.firstIngredientRatio}:{nutrient.secondIngredientRatio}</td>
-          <td>{nutrient.secondIngredient}</td>
-          <td><button className='btn btn-ghost btn-xs text-deepbrown hover:bg-deepbrown/10  items-center gap-1'
-          
-          disabled={isDisabled}
-          onClick={() => {setIsChooseNutrientRatiosModalOpen(true); setNutrientRatioModifyType('Edit')}}
-          >
-            
-            
-            <RiPencilLine className='h-4 w-4 text-deepbrown'/>
-            </button></td>
-          <td>
-            <button
-              disabled={isDisabled}
-              className={`${isDisabled ? 'hidden' : ''} btn btn-ghost btn-xs text-red-500 hover:bg-red-200`}
-              // onClick={() => handleRemoveNutrient(nutrient)}
-            >
-              <RiDeleteBinLine />
-            </button>
+          <td className="w-1/5">{nutrient.firstIngredient}</td>
+          <td className="w-1/5">{nutrient.secondIngredient}</td>
+          <td className="w-1/5 text-center">{nutrient.operator || '='}</td>
+          <td className="w-1/5 text-center">{nutrient.firstIngredientRatio} : {nutrient.secondIngredientRatio}</td>
+          <td className="w-1/5 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <button className='btn btn-ghost btn-xs text-deepbrown hover:bg-deepbrown/10 items-center gap-1'
+                disabled={isDisabled}
+                onClick={() => {setIsChooseNutrientRatiosModalOpen(true); setNutrientRatioModifyType('Edit')}}
+              >
+                <RiPencilLine className='h-4 w-4 text-deepbrown'/>
+              </button>
+              <button
+                disabled={isDisabled}
+                className={`${isDisabled ? 'hidden' : ''} btn btn-ghost btn-xs text-red-500 hover:bg-red-200 ml-1`}
+                // onClick={() => handleRemoveNutrient(nutrient)}
+              >
+                <RiDeleteBinLine />
+              </button>
+            </div>
           </td>
         </tr>
       ))
@@ -797,36 +797,38 @@ function ViewFormulation({
   }
 
   const [formulationRatioConstraintSamples, setFormulationRatioConstraintSamples] = useState({
-        id: 1,
-        name: "Starter Feed",
-        ingredients: [
-            { name: "Corn", percentage: 50 },
-            { name: "Soybean Meal", percentage: 30 },
-            { name: "Fish Meal", percentage: 10 },
-            { name: "Premix", percentage: 10 }
-        ],
-        nutrientConstraints: {
-            protein: { min: 20, max: 24 },
-            fat: { min: 3, max: 5 },
-            fiber: { min: 2, max: 5 },
-            calcium: { min: 0.8, max: 1.2 },
-            phosphorus: { min: 0.4, max: 0.6 }
-        },
-        nutrientRatioConstraints: [
-            {
-                firstIngredient: "Protein",
-                secondIngredient: "Fat",
-                firstIngredientRatio: 2,
-                secondIngredientRatio: 1
-            },
-            {
-                firstIngredient: "Calcium",
-                secondIngredient: "Phosphorus",
-                firstIngredientRatio: 3,
-                secondIngredientRatio: 2
-            },// calcium:phosphorus = 3:2
-        ]
-    });
+    id: 1,
+    name: "Starter Feed",
+    ingredients: [
+      { name: "Corn", percentage: 50 },
+      { name: "Soybean Meal", percentage: 30 },
+      { name: "Fish Meal", percentage: 10 },
+      { name: "Premix", percentage: 10 }
+    ],
+    nutrientConstraints: {
+      protein: { min: 20, max: 24 },
+      fat: { min: 3, max: 5 },
+      fiber: { min: 2, max: 5 },
+      calcium: { min: 0.8, max: 1.2 },
+      phosphorus: { min: 0.4, max: 0.6 }
+    },
+    nutrientRatioConstraints: [
+      {
+        firstIngredient: "Protein",
+        secondIngredient: "Fat",
+        operator: "=", 
+        firstIngredientRatio: 2,
+        secondIngredientRatio: 1
+      },
+      {
+        firstIngredient: "Calcium",
+        secondIngredient: "Phosphorus",
+        operator: ">=", 
+        firstIngredientRatio: 3,
+        secondIngredientRatio: 2
+      },
+    ]
+  });
   const [nutrientRatioModifyType, setNutrientRatioModifyType] = useState('add');
 
   // loading due to api calls
@@ -1188,11 +1190,11 @@ function ViewFormulation({
                 <table className="table-sm table-pin-rows table w-full">
                   <thead>
                     <tr>
-                      <th>Nutrient 1</th>
-                      <th>Ratio</th>
-                      <th>Nutrient 2</th>
-                      
-                      <th></th>
+                      <th className="w-1/5">Nutrient 1</th>
+                      <th className="w-1/5">Nutrient 2</th>
+                      <th className="w-1/5 text-center">Operator</th>
+                      <th className="w-1/5 text-center">Ratio</th>
+                      <th className="w-1/5 text-center"></th>
                     </tr>
                   </thead>
                   <tbody>{renderNutrientRatiosTableRows()}</tbody>
