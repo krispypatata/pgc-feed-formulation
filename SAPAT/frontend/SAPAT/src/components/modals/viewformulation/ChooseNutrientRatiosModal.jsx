@@ -1,59 +1,97 @@
 import { RiCloseLine, RiSearchLine } from 'react-icons/ri'
 import { useState, useEffect } from 'react'
-import { RiPencilLine, RiDeleteBinLine, RiAddLine } from 'react-icons/ri'
-import { set } from 'lodash'
 
 // import { Info } from '../../icons/Info.jsx'
 function ChooseNutrientRatiosModal({
   isOpen,
   onClose,
-  nutrients,
-  onResult,
-  formulationRatioConstraintSamples,
+  nutrients,    // selected nutrients in the formulation
+  allNutrients, // full nutrients info
   setFormulationRatioConstraintSamples,
   type,
 }) {
-  const [checkedNutrients, setCheckedNutrients] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filteredNutrients, setFilteredNutrients] = useState(nutrients)
-  const [showChooseNutrientsModal, setShowChooseNutrientsModal] =
-    useState(false)
+  const [showChooseNutrientsModal, setShowChooseNutrientsModal] = useState(false)
   const [nutrientRatio, setNutrientRatio] = useState({
     firstIngredient: '',
+    firstIngredientId: '',
     firstIngredientRatio: '',
     secondIngredient: '',
+    secondIngredientId: '',
     secondIngredientRatio: '',
   })
-  const [nutrientNo, setNutrientNo] = useState(null)
   const [operator, setOperator] = useState('=')
+  const [chooseType, setChooseType] = useState('first') // 'first' or 'second'
 
-  const renderNutrientRatiosTableRows = () => {
-    if (formulationRatioConstraintSamples) {
-      return formulationRatioConstraintSamples.nutrientRatioConstraints.map(
-        (nutrient, index) => (
-          <tr key={index} className="hover:bg-base-300">
-            <td>{nutrient.firstIngredient}</td>
-            <td>
-              {nutrient.firstIngredientRatio}:{nutrient.secondIngredientRatio}
-            </td>
-            <td>{nutrient.secondIngredient}</td>
-            <td>
-              <button
-                // disabled={isDisabled}
-                className={`btn btn-ghost btn-xs text-red-500 hover:bg-red-200`}
-                // onClick={() => handleRemoveNutrient(nutrient)}
-              >
-                <RiDeleteBinLine />
-              </button>
-            </td>
-          </tr>
-        )
-      )
-    }
-  }
+  // Get selected nutrient IDs
+  const firstNutrientId = nutrientRatio.firstIngredientId
+  const secondNutrientId = nutrientRatio.secondIngredientId
+
+  // Only enable Add if all fields are filled and valid
+  const isAddEnabled =
+    firstNutrientId &&
+    secondNutrientId &&
+    firstNutrientId !== secondNutrientId &&
+    operator &&
+    nutrientRatio.firstIngredientRatio &&
+    nutrientRatio.secondIngredientRatio &&
+    !isNaN(Number(nutrientRatio.firstIngredientRatio)) &&
+    !isNaN(Number(nutrientRatio.secondIngredientRatio))
+
+  // Open the nutrient selection modal for first or second nutrient
   const openChooseNutrientsModal = (type) => {
     setShowChooseNutrientsModal(true)
-    setNutrientNo(type === 'first' ? 1 : 2)
+    setChooseType(type) // 'first' or 'second'
+  }
+
+  // Handle selection from the popup
+  const handleNutrientSelect = (nutrient) => {
+    if (chooseType === 'first') {
+      setNutrientRatio((prev) => ({
+        ...prev,
+        firstIngredient: nutrient.name,
+        firstIngredientId: nutrient.nutrient_id ?? nutrient._id,
+      }))
+    } else {
+      setNutrientRatio((prev) => ({
+        ...prev,
+        secondIngredient: nutrient.name,
+        secondIngredientId: nutrient.nutrient_id ?? nutrient._id,
+      }))
+    }
+    setShowChooseNutrientsModal(false)
+  }
+
+  // Handle Add button click
+  const handleAdd = () => {
+    if (!isAddEnabled) return
+    // Add the new ratio constraint to the list
+    const newConstraint = {
+      firstIngredient: nutrientRatio.firstIngredient,
+      firstIngredientId: nutrientRatio.firstIngredientId,
+      firstIngredientRatio: Number(nutrientRatio.firstIngredientRatio),
+      secondIngredient: nutrientRatio.secondIngredient,
+      secondIngredientId: nutrientRatio.secondIngredientId,
+      secondIngredientRatio: Number(nutrientRatio.secondIngredientRatio),
+      operator,
+    }
+    setFormulationRatioConstraintSamples((prev) => ({
+      ...prev,
+      nutrientRatioConstraints: [
+        ...(prev.nutrientRatioConstraints || []),
+        newConstraint,
+      ],
+    }))
+    // Reset fields
+    setNutrientRatio({
+      firstIngredient: '',
+      firstIngredientId: '',
+      firstIngredientRatio: '',
+      secondIngredient: '',
+      secondIngredientId: '',
+      secondIngredientRatio: '',
+    })
+    setOperator('=')
+    onClose()
   }
 
   return (
@@ -78,7 +116,8 @@ function ChooseNutrientRatiosModal({
           {/* Nutrients table */}
           <form
             onSubmit={(e) => {
-              console.log('submit')
+              e.preventDefault()
+              handleAdd()
             }}
           >
             <div className="grid grid-cols-[auto_75px_100px] gap-4 mt-2">
@@ -134,7 +173,7 @@ function ChooseNutrientRatiosModal({
                   <div className="divider"></div>
                 </div>
                 <input
-                  id="input-ingredient1"
+                  id="input-ingredient2"
                   type="text"
                   value={nutrientRatio.secondIngredientRatio}
                   onChange={(e) =>
@@ -159,12 +198,11 @@ function ChooseNutrientRatiosModal({
                 Cancel
               </button>
               <button
-                type="button"
+                type="submit"
                 className="btn bg-green-button rounded-xl px-8 text-white hover:bg-green-600"
-                // disabled={checkedNutrients.length === 0}
-                onClick={onClose}
+                disabled={!isAddEnabled}
               >
-                {type}
+                Add
               </button>
             </div>
           </form>
@@ -173,90 +211,73 @@ function ChooseNutrientRatiosModal({
           <button onClick={onClose}>close</button>
         </form>
       </dialog>
+      {/* Nutrient selection popup */}
       <ShowNutrientsSection
         isOpen={showChooseNutrientsModal}
         onClose={() => setShowChooseNutrientsModal(false)}
         nutrients={nutrients}
-        onResult={onResult}
-        setNutrientRatio={setNutrientRatio}
-        type={nutrientNo}
-        nutrientRatio={nutrientRatio}
+        allNutrients={allNutrients}
+        onSelect={handleNutrientSelect}
+        excludeId={chooseType === 'first' ? nutrientRatio.secondIngredientId : nutrientRatio.firstIngredientId}
       />
     </>
   )
 }
 
+// Nutrient selection popup
 function ShowNutrientsSection({
   isOpen,
   onClose,
-  nutrients,
-  onResult,
-  setNutrientRatio,
-  type,
-  nutrientRatio,
+  nutrients,    // selected nutrients in the formulation
+  allNutrients, // full nutrients info
+  onSelect,
+  excludeId,
 }) {
-  const [selectedNutrient, setSelectedNutrient] = useState(null)
+  const [selectedNutrientId, setSelectedNutrientId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filteredNutrients, setFilteredNutrients] = useState(nutrients)
+  const [filteredNutrients, setFilteredNutrients] = useState([])
+
+  // Helper: join selected nutrients with full info
+  function getFullNutrientInfo(nutrient) {
+    const id = nutrient.nutrient_id ?? nutrient._id
+    return (
+      allNutrients?.find(
+        (n) => (n.nutrient_id ?? n._id)?.toString() === id?.toString()
+      ) || nutrient
+    )
+  }
 
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredNutrients(nutrients)
-    } else {
-      const term = searchTerm.toLowerCase().trim()
-      const filtered = nutrients.filter(
-        (nutrient) =>
-          nutrient.name.toLowerCase().includes(term) ||
-          (nutrient.abbreviation &&
-            nutrient.abbreviation.toLowerCase().includes(term)) ||
-          (nutrient.group && nutrient.group.toLowerCase().includes(term))
+    let filtered = nutrients
+    if (excludeId) {
+      filtered = filtered.filter(
+        (nutrient) => (nutrient.nutrient_id ?? nutrient._id) !== excludeId
       )
-      setFilteredNutrients(filtered)
     }
-  }, [searchTerm, nutrients])
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim()
+      filtered = filtered.filter(
+        (nutrient) => {
+          const full = getFullNutrientInfo(nutrient)
+          return (
+            full.name?.toLowerCase().includes(term) ||
+            (full.abbreviation && full.abbreviation.toLowerCase().includes(term)) ||
+            (full.group && full.group.toLowerCase().includes(term))
+          )
+        }
+      )
+    }
+    setFilteredNutrients(filtered)
+  }, [searchTerm, nutrients, excludeId, allNutrients])
 
-  const updateIngredientRatio = () => {
-    if (type == 1) {
-      setNutrientRatio((prev) => ({
-        ...prev,
-        firstIngredient: selectedNutrient ? selectedNutrient.name : '',
-      }))
-      console.log()
-    } else if (type == 2) {
-      setNutrientRatio((prev) => ({
-        ...prev,
-        secondIngredient: selectedNutrient ? selectedNutrient.name : '',
-      }))
-    }
-    console.log(nutrientRatio)
-    onClose()
-  }
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (selectedNutrient) {
-      updateIngredientRatio()
-      setSelectedNutrient(null)
-    }
-  }
+  // When the modal opens, reset selection
+  useEffect(() => {
+    if (isOpen) setSelectedNutrientId(null)
+  }, [isOpen])
 
   const handleRowClick = (nutrient) => {
-    const id = nutrient.nutrient_id ?? nutrient._id
-
-    setSelectedNutrient({ nutrient_id: id, name: nutrient.name })
-  }
-
-  const handleRadioChange = (nutrient, e) => {
-    e.stopPropagation()
-    const id = nutrient.nutrient_id ?? nutrient._id
-    if (selectedNutrient && selectedNutrient.nutrient_id === id) {
-      setSelectedNutrient(null)
-    } else {
-      setSelectedNutrient({ nutrient_id: id, name: nutrient.name })
-    }
-  }
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value)
+    setSelectedNutrientId(nutrient.nutrient_id ?? nutrient._id)
+    onSelect(nutrient)
   }
 
   return (
@@ -276,7 +297,7 @@ function ShowNutrientsSection({
         <h3 className="text-deepbrown mb-4 text-lg font-bold">
           Select Nutrient
         </h3>
-        <p className="mb-4 text-sm text-gray-500">Description</p>
+        <p className="mb-4 text-sm text-gray-500">Choose a nutrient for the ratio constraint.</p>
 
         {/* Search input */}
         <div className="relative mb-4">
@@ -287,7 +308,7 @@ function ShowNutrientsSection({
               placeholder="Search nutrients..."
               className="input input-bordered w-full rounded-xl pl-10"
               value={searchTerm}
-              onChange={handleSearchChange}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
               <button
@@ -301,89 +322,44 @@ function ShowNutrientsSection({
         </div>
 
         {/* Nutrients table */}
-        <form onSubmit={handleSubmit}>
-          <div className="max-h-64 overflow-y-auto rounded-2xl border border-gray-200">
-            <table className="table-pin-rows table w-full">
-              <thead className="bg-gray-50">
+        <div className="max-h-64 overflow-y-auto rounded-2xl border border-gray-200">
+          <table className="table-pin-rows table w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="font-semibold">Abbreviation</th>
+                <th className="font-semibold">Name</th>
+                <th className="font-semibold">Unit</th>
+                <th className="font-semibold">Group</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredNutrients.length > 0 ? (
+                filteredNutrients.map((nutrient) => {
+                  const id = nutrient.nutrient_id ?? nutrient._id
+                  const full = getFullNutrientInfo(nutrient)
+                  return (
+                    <tr
+                      key={id}
+                      className={`hover cursor-pointer ${selectedNutrientId === id ? 'bg-blue-100' : ''}`}
+                      onClick={() => handleRowClick(nutrient)}
+                    >
+                      <td>{full.abbreviation || ''}</td>
+                      <td>{full.name || ''}</td>
+                      <td>{full.unit || ''}</td>
+                      <td>{full.group || ''}</td>
+                    </tr>
+                  )
+                })
+              ) : (
                 <tr>
-                  <th className="font-semibold">Abbreviation</th>
-                  <th className="font-semibold">Name</th>
-                  <th className="font-semibold">Unit</th>
-                  <th className="font-semibold">Group</th>
+                  <td colSpan="4" className="py-4 text-center">
+                    No nutrients found. Try another search term.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredNutrients.length > 0 ? (
-                  filteredNutrients.map((nutrient, index) => {
-                    const id = nutrient.nutrient_id ?? nutrient._id
-                    const isSelected =
-                      selectedNutrient && selectedNutrient.nutrient_id === id
-                    return (
-                      <tr
-                        key={index}
-                        className={`hover cursor-pointer ${
-                          isSelected ? 'bg-blue-100' : ''
-                        }`}
-                        onClick={() => handleRowClick(nutrient)}
-                      >
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="radio"
-                            name="nutrient-radio"
-                            checked={!!isSelected}
-                            onClick={() => {
-                              if (isSelected) setSelectedNutrient(null)
-                              else
-                                setSelectedNutrient({
-                                  nutrient_id: id,
-                                  name: nutrient.name,
-                                })
-                            }}
-                          />
-                        </td>
-                        <td>{nutrient.abbreviation}</td>
-                        <td>{nutrient.name}</td>
-                        <td>{nutrient.unit}</td>
-                        <td>{nutrient.group}</td>
-                      </tr>
-                    )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="py-4 text-center">
-                      No nutrients found. Try another search term.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Selected count */}
-          <div className="mt-4 text-sm text-gray-600">
-            {selectedNutrient && (
-              <span>{selectedNutrient.name} nutrient selected</span>
-            )}
-          </div>
-
-          {/* Modal actions */}
-          <div className="modal-action">
-            <button
-              type="button"
-              className="btn rounded-xl px-8"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn bg-green-button rounded-xl px-8 text-white hover:bg-green-600"
-              disabled={!selectedNutrient}
-            >
-              Add
-            </button>
-          </div>
-        </form>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>close</button>

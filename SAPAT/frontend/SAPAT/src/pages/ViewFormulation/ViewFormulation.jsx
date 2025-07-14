@@ -1299,7 +1299,8 @@ function ViewFormulation({
       <ChooseNutrientRatiosModal
         isOpen={isChooseNutrientRatiosModalOpen}
         onClose={() => setIsChooseNutrientRatiosModalOpen(false)}
-        nutrients={nutrientsMenu}
+        nutrients={nutrients}
+        allNutrients={listOfNutrients}
         onResult={handleAddNutrients}
         formulationRatioConstraintSamples={formulationRatioConstraintSamples}
         setFormulationRatioConstraintSamples={setFormulationRatioConstraintSamples}
