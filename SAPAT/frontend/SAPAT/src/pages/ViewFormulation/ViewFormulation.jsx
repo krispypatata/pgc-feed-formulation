@@ -47,6 +47,8 @@ function ViewFormulation({
   updateNutrientProperty,
   handleSave,
   specialformulations,
+  updateShadowPrices, // new prop
+  shadowPrices, // new prop
 }) {
   const VITE_API_URL = import.meta.env.VITE_API_URL
 
@@ -84,7 +86,6 @@ function ViewFormulation({
 
   // Shadow prices (for simplex optimization)
   const [shadowPricingTabOpen, setShadowPricingTabOpen ]= useState(false);
-  const [shadowPrices, setShadowPrices] = useState([]);
 
   // un-updated ingredient/nutrient values (when user enters new min/max that has not been optimized yet)
   const [isDirty, setIsDirty] = useState(false)
@@ -310,10 +311,10 @@ function ViewFormulation({
       const optimizedCost = res.data.optimizedCost
       const optimizedIngredients = res.data.optimizedIngredients
       const optimizedNutrients = res.data.optimizedNutrients
-      const shadowPrices = res.data.shadowPrices
+      const shadowPricesResult = res.data.shadowPrices
 
-      // Update shadow prices in local state
-      setShadowPrices(shadowPrices || []);
+      // Update shadow prices in real-time storage
+      updateShadowPrices(shadowPricesResult || []);
 
       updateCost(optimizedCost)
       optimizedIngredients.map((ing, index) => {
@@ -350,7 +351,6 @@ function ViewFormulation({
           displayName: newCollaborator.newDisplayName,
         }
       )
-
       const newCollaboratorData = {
         _id: newCollaborator.newId,
         email: newCollaborator.newEmail,

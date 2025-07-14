@@ -55,6 +55,7 @@ function FormulationRoom() {
           name: '',
           description: '',
           animal_group: '',
+          shadowPrices: [],
         }),
       }}
     >

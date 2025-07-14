@@ -86,6 +86,11 @@ function ViewFormulationEntry({ id }) {
     []
   )
 
+  // Update shadow prices in real-time storage
+  const updateShadowPrices = useMutation(({ storage }, shadowPrices) => {
+    storage.get('formulation').set('shadowPrices', shadowPrices)
+  }, [])
+
   const [formulation, setFormulation] = useState({
     code: '',
     name: '',
@@ -241,6 +246,8 @@ function ViewFormulationEntry({ id }) {
         updateNutrientProperty={updateNutrientProperty}
         handleSave={updateDatabase}
         specialformulations={specialformulations}
+        updateShadowPrices={updateShadowPrices}
+        shadowPrices={formulationRealTime?.shadowPrices || []}
       />
       {/*  Toasts */}
       <Toast
