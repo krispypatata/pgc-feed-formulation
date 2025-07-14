@@ -924,6 +924,7 @@ function ViewFormulation({
                 formulation={formulationRealTime}
                 owner={owner}
                 weight={weight}
+                shadowPrices={shadowPrices}
               />
               <div className='flex items-center justify-end gap-1 pr-2'>
               
@@ -1187,9 +1188,9 @@ function ViewFormulation({
                 <table className="table-sm table-pin-rows table w-full">
                   <thead>
                     <tr>
-                      <th>Ingredient1</th>
+                      <th>Nutrient 1</th>
                       <th>Ratio</th>
-                      <th>Ingredient2</th>
+                      <th>Nutrient 2</th>
                       
                       <th></th>
                     </tr>
