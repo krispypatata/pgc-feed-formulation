@@ -57,6 +57,7 @@ function FormulationRoom() {
           animal_group: '',
           shadowPrices: [],
           nutrientsMenu: [],
+          ingredientsMenu: [],
         }),
       }}
     >

@@ -7,18 +7,16 @@ import {
   useMutation,
   useStorage,
 } from '@liveblocks/react/suspense'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import useAuth from '../../hook/useAuth.js'
 import Loading from '../../components/Loading.jsx'
 import ViewFormulation from './ViewFormulation.jsx'
 import Toast from '../../components/Toast.jsx'
-import { set } from 'lodash'
 
 function ViewFormulationEntry({ id }) {
   const VITE_API_URL = import.meta.env.VITE_API_URL
-  const location = useLocation() // Track URL changes
   const { user, loading } = useAuth()
   const others = useOthers()
   const self = useSelf()
@@ -26,9 +24,13 @@ function ViewFormulationEntry({ id }) {
 
   const formulationRealTime = useStorage((root) => root.formulation)
   const nutrientsMenu = useStorage((root) => root.formulation?.nutrientsMenu || [])
+  const ingredientsMenu = useStorage((root) => root.formulation?.ingredientsMenu || [])
 
   const updateNutrientsMenu = useMutation(({ storage }, newMenu) => {
     storage.get('formulation').set('nutrientsMenu', newMenu)
+  }, [])
+  const updateIngredientsMenu = useMutation(({ storage }, newMenu) => {
+    storage.get('formulation').set('ingredientsMenu', newMenu)
   }, [])
 
   // special formulation based on animal group
@@ -255,6 +257,8 @@ function ViewFormulationEntry({ id }) {
         shadowPrices={formulationRealTime?.shadowPrices || []}
         nutrientsMenu={nutrientsMenu}
         updateNutrientsMenu={updateNutrientsMenu}
+        ingredientsMenu={ingredientsMenu}
+        updateIngredientsMenu={updateIngredientsMenu}
       />
       {/*  Toasts */}
       <Toast

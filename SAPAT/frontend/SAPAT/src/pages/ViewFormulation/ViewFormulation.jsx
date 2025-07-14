@@ -50,6 +50,8 @@ function ViewFormulation({
   shadowPrices, // new prop
   nutrientsMenu, // from Liveblocks
   updateNutrientsMenu, // mutation from Liveblocks
+  ingredientsMenu, // from Liveblocks
+  updateIngredientsMenu, // mutation from Liveblocks
 }) {
   const VITE_API_URL = import.meta.env.VITE_API_URL
 
@@ -72,7 +74,6 @@ function ViewFormulation({
   const [listOfNutrients, setListOfNutrients] = useState([])
 
   // choosing ingredients and nutrients to create feeds
-  const [ingredientsMenu, setIngredientsMenu] = useState([])
   const [isChooseIngredientsModalOpen, setIsChooseIngredientsModalOpen] =
     useState(false)
   const [isChooseNutrientsModalOpen, setIsChooseNutrientsModalOpen] =
@@ -165,7 +166,7 @@ function ViewFormulation({
       const unusedIngredients = fetchedData.filter(
         (item) => !arr2Ids.has(item.ingredient_id || item._id)
       )
-      setIngredientsMenu(unusedIngredients)
+      updateIngredientsMenu(unusedIngredients)
 
       // ingredients in the user's workspace
       const listOfIngredientsIds = new Set(
@@ -342,7 +343,7 @@ function ViewFormulation({
 
   const handleAddCollaborator = async () => {
     try {
-      const res = await axios.put(
+      await axios.put(
         `${VITE_API_URL}/formulation/collaborator/${id}`,
         {
           updaterId: user._id,
@@ -376,7 +377,7 @@ function ViewFormulation({
 
   const handleDeleteCollaborator = async (collaboratorId) => {
     try {
-      const res = await axios.delete(
+      await axios.delete(
         `${VITE_API_URL}/formulation/collaborator/${id}/${collaboratorId}`
       )
       setCollaborators(
@@ -412,9 +413,7 @@ function ViewFormulation({
       const arr2Ids = new Set(
         formattedIngredients.map((item) => item.ingredient_id)
       )
-      setIngredientsMenu((prev) =>
-        prev.filter((item) => !arr2Ids.has(item.ingredient_id || item._id))
-      )
+      updateIngredientsMenu(ingredientsMenu.filter((item) => !arr2Ids.has(item.ingredient_id || item._id)))
       updateCost(0)
       updateIngredients([...selectedIngredients, ...formattedIngredients])
       setIsChooseIngredientsModalOpen(false)
@@ -472,7 +471,7 @@ function ViewFormulation({
 
   const handleRemoveIngredient = async (ingredientToRemove) => {
     try {
-      const res = await axios.delete(
+      await axios.delete(
         `${VITE_API_URL}/formulation/ingredients/${id}/${ingredientToRemove.ingredient_id}`
       )
       // remove ingredientToRemove from selected ingredients
@@ -493,7 +492,7 @@ function ViewFormulation({
           : item._id === ingredientToRemove.ingredient_id
       )
       if (removedIngredient) {
-        setIngredientsMenu([removedIngredient, ...ingredientsMenu])
+        updateIngredientsMenu([removedIngredient, ...ingredientsMenu])
       }
       updateCost(0)
       setIsDirty(false)
@@ -512,7 +511,7 @@ function ViewFormulation({
 
   const handleRemoveNutrient = async (nutrientToRemove) => {
     try {
-      const res = await axios.delete(
+      await axios.delete(
         `${VITE_API_URL}/formulation/nutrients/${id}/${nutrientToRemove.nutrient_id}`
       )
       // remove nutrientToRemove from selected nutrients
