@@ -477,7 +477,7 @@ function GenerateReport({ userAccess, formulation, owner, weight, shadowPrices =
     // Add Shadow Prices section (only if available)
     // Filter shadow prices the same way as in ShadowPricingTab
     const filteredShadowPrices = shadowPrices.filter(
-      row => row.constraint !== "Total Ratio"
+      row => row.constraint !== "Total Ratio" && !row.constraint.includes("Ratio:")
     );
 
     if (filteredShadowPrices.length > 0) {

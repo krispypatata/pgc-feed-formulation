@@ -5,7 +5,7 @@ function ShadowPricingTab({ open, onClose, data = []}) {
 
     // Filter out unwanted rows
     const filteredData = data.filter(
-      row => row.constraint !== "Total Ratio" && row.shadowPrice !== 0
+      row => row.constraint !== "Total Ratio" && !row.constraint.includes("Ratio:") && row.shadowPrice !== 0
     );
 
     return (
