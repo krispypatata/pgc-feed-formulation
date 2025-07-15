@@ -16,6 +16,14 @@ const nutrientConstraintSchema = new Schema({
     value: { type: Number, default: 0 },
 })
 
+const nutrientRatioConstraintSchema = new Schema({
+    firstIngredient: { type: String },
+    secondIngredient: { type: String },
+    operator: { type: String },
+    firstIngredientRatio: { type: Number },
+    secondIngredientRatio: { type: Number }
+});
+
 const userAccessSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, ref: 'User' },
     access: { type: String, enum: ['view', 'edit', 'owner'] },
@@ -35,6 +43,10 @@ const formulationSchema = new Schema({
     },
     nutrients: {
         type: [nutrientConstraintSchema],
+        default: []
+    },
+    nutrientRatioConstraints: {
+        type: [nutrientRatioConstraintSchema],
         default: []
     },
     collaborators: {

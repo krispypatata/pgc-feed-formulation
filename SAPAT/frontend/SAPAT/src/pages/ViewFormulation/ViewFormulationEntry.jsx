@@ -163,6 +163,7 @@ function ViewFormulationEntry({ id }) {
         updateCost(formulationData.cost)
         updateIngredients(formulationData.ingredients)
         updateNutrients(formulationData.nutrients)
+        updateNutrientRatioConstraints(formulationData.nutrientRatioConstraints || [])
         fetchspecialformulations(formulationData.animal_group) // Fetch special formulations based on animal group
       }
       // set owner id
@@ -207,6 +208,7 @@ function ViewFormulationEntry({ id }) {
         weight: currentFormulation.weight,
         ingredients: currentFormulation.ingredients,
         nutrients: currentFormulation.nutrients,
+        nutrientRatioConstraints: nutrientRatioConstraints,
       })
       setShowToast(true) // Show success toast
       setMessage('Formulation saved to database!')
