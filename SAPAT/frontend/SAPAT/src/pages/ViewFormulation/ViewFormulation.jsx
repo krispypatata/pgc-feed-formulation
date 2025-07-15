@@ -296,7 +296,6 @@ function ViewFormulation({
   }
 
   const handleOptimize = async (
-    // ingredientsData,
     ingredients,
     nutrients,
     weight,
@@ -304,11 +303,11 @@ function ViewFormulation({
   ) => {
     try {
       const res = await axios.post(`${VITE_API_URL}/optimize/${type}`, {
-        // ingredientsData,
         userId: owner?.userId,
         ingredients,
         nutrients,
-        weight
+        weight,
+        nutrientRatioConstraints 
       })
       console.log(res.data) // View Optimization results
       const optimizedCost = res.data.optimizedCost
@@ -328,7 +327,7 @@ function ViewFormulation({
       })
       setIsDirty(false)
     } catch (err) {
-      if (err.response.data.status === 'No optimal solution') {
+      if (err.response?.data?.status === 'No optimal solution') {
         // toast instructions
         setShowToast(true)
         setMessage(`No feasible formula found. Please adjust your constraints.`)

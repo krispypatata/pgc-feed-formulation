@@ -36,7 +36,8 @@ const fetchIngredientsData = async (userId, skip = 0, limit = 10000) => {
 }
 
 const formatInput = async (data) => {
-  const { userId, ingredients, nutrients, weight } = data;
+  // Accept nutrientRatioConstraints from the request body (default to empty array if not present)
+  const { userId, ingredients, nutrients, weight, nutrientRatioConstraints = [] } = data;
   const ingredientsData = await fetchIngredientsData(userId);
 
   // === objective function (minimize cost) ===
@@ -71,6 +72,62 @@ const formatInput = async (data) => {
       }
     }
   });
+
+  // === nutrient ratio constraints ===
+  for (const ratio of nutrientRatioConstraints) {
+    // Accept both ID and name for each nutrient
+    const firstNutrientId = ratio.firstIngredientId || ratio.firstIngredient;
+    const secondNutrientId = ratio.secondIngredientId || ratio.secondIngredient;
+    const firstNutrientName = ratio.firstIngredient;
+    const secondNutrientName = ratio.secondIngredient;
+    const { operator, firstIngredientRatio, secondIngredientRatio } = ratio;
+    if (!firstNutrientId || !secondNutrientId || !operator || !firstIngredientRatio || !secondIngredientRatio) continue;
+    const ratioValue = firstIngredientRatio / secondIngredientRatio;
+    const vars = ingredients.map(ingredient => {
+      const ingData = ingredientsData.find(item => item.name === ingredient.name);
+      let n1 = 0, n2 = 0;
+      if (ingData && Array.isArray(ingData.nutrients)) {
+        // Match nutrient ID and name
+        const n1Obj = ingData.nutrients.find(n =>
+          (n.nutrient?.toString() === firstNutrientId?.toString()) || (n.name === firstNutrientName)
+        );
+        const n2Obj = ingData.nutrients.find(n =>
+          (n.nutrient?.toString() === secondNutrientId?.toString()) || (n.name === secondNutrientName)
+        );
+        n1 = n1Obj?.value || 0;
+        n2 = n2Obj?.value || 0;
+      }
+      return {
+        name: ingredient.name,
+        coef: n1 - ratioValue * n2
+      };
+    });
+    
+    // DEBUG
+    console.log(`[Nutrient Ratio Constraint] ${firstNutrientName || firstNutrientId} / ${secondNutrientName || secondNutrientId} ${operator} ${ratioValue}`);
+    console.log(vars.map(v => `${v.name}: ${v.coef}`).join(', '));
+    
+    // If all coefs are zero, then skip 
+    if (vars.every(v => v.coef === 0)) {
+      console.warn(`[Nutrient Ratio Constraint] Skipping constraint for ${firstNutrientName || firstNutrientId} / ${secondNutrientName || secondNutrientId} because all coefficients are zero.`);
+      continue;
+    }
+    let bnds;
+    if (operator === "=") {
+      bnds = { type: "GLP_FX", lb: 0, ub: 0 };
+    } else if (operator === ">=") {
+      bnds = { type: "GLP_LO", lb: 0, ub: null };
+    } else if (operator === "<=") {
+      bnds = { type: "GLP_UP", lb: null, ub: 0 };
+    } else {
+      continue; // Unknown operator
+    }
+    constraints.push({
+      name: `Ratio: ${firstNutrientName || firstNutrientId}/${secondNutrientName || secondNutrientId} ${operator} ${ratioValue}`,
+      vars,
+      bnds
+    });
+  }
 
   // === ingredient variable bounds === (e.g. 1 <= x1 <= 14)
   const variableBounds = ingredients.map(ingredient => {
