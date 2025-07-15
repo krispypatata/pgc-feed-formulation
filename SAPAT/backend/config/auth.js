@@ -39,7 +39,8 @@ passport.use(new GoogleStrategy({
           displayName: profile.displayName,
           firstName: profile.name.givenName,
           lastName: profile.name.familyName,
-          profilePicture: profile.photos[0].value
+          profilePicture: profile.photos[0].value,
+          userType: 'regular'
         });
       }
       console.log('Google Strategy: User created or found');
