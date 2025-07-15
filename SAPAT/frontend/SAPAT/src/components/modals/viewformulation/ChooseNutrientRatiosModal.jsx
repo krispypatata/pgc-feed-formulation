@@ -91,12 +91,14 @@ function ChooseNutrientRatiosModal({
   // Handle Add or Update button click
   const handleAddOrUpdate = () => {
     if (!isAddEnabled) return;
+    const firstNutrient = (allNutrients || []).find(n => n.nutrient_id === nutrientRatio.firstIngredientId || n.name === nutrientRatio.firstIngredient);
+    const secondNutrient = (allNutrients || []).find(n => n.nutrient_id === nutrientRatio.secondIngredientId || n.name === nutrientRatio.secondIngredient);
     const newConstraint = {
-      firstIngredient: nutrientRatio.firstIngredient,
-      firstIngredientId: nutrientRatio.firstIngredientId,
+      firstIngredient: firstNutrient ? firstNutrient.name : nutrientRatio.firstIngredient,
+      firstIngredientId: firstNutrient ? firstNutrient.nutrient_id : nutrientRatio.firstIngredientId,
       firstIngredientRatio: Number(nutrientRatio.firstIngredientRatio),
-      secondIngredient: nutrientRatio.secondIngredient,
-      secondIngredientId: nutrientRatio.secondIngredientId,
+      secondIngredient: secondNutrient ? secondNutrient.name : nutrientRatio.secondIngredient,
+      secondIngredientId: secondNutrient ? secondNutrient.nutrient_id : nutrientRatio.secondIngredientId,
       secondIngredientRatio: Number(nutrientRatio.secondIngredientRatio),
       operator,
     };

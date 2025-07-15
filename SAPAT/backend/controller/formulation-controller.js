@@ -207,7 +207,20 @@ const getFormulationByFilters = async (req, res) => {
 
 const updateFormulation = async (req, res) => {
     const { id } = req.params;
-    const { code, name, description, animal_group, cost, weight, ingredients, nutrients, nutrientRatioConstraints } = req.body;
+    let { code, name, description, animal_group, cost, weight, ingredients, nutrients, nutrientRatioConstraints } = req.body;
+    
+    // // Ensure both name and ID fields are preserved in nutrientRatioConstraints (fix for data persistence issue when using the solver)
+    nutrientRatioConstraints = (nutrientRatioConstraints || []).map(constraint => {
+      return {
+        firstIngredient: constraint.firstIngredient,
+        firstIngredientId: constraint.firstIngredientId,
+        secondIngredient: constraint.secondIngredient,
+        secondIngredientId: constraint.secondIngredientId,
+        operator: constraint.operator,
+        firstIngredientRatio: constraint.firstIngredientRatio,
+        secondIngredientRatio: constraint.secondIngredientRatio
+      }
+    });
     try {
         const formulation = await Formulation.findByIdAndUpdate(
           id,

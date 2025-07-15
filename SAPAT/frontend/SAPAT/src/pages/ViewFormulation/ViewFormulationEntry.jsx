@@ -128,7 +128,7 @@ function ViewFormulationEntry({ id }) {
   }
 
   useEffect(() => {
-    formulationRef.current = formulationRealTime // Always sync the ref with the latest formulation
+    formulationRef.current = formulationRealTime
   }, [formulationRealTime])
 
   useEffect(() => {
@@ -154,6 +154,7 @@ function ViewFormulationEntry({ id }) {
       const response = await axios.get(`${VITE_API_URL}/formulation/${id}`)
       const formulationData = response.data.formulations
       setFormulation(formulationData)
+
       // update contents of liveblocks storage based on the database (when there are no other people editing yet)
       if (others.length === 0) {
         updateCode(formulationData.code)
@@ -163,8 +164,23 @@ function ViewFormulationEntry({ id }) {
         updateCost(formulationData.cost)
         updateIngredients(formulationData.ingredients)
         updateNutrients(formulationData.nutrients)
-        updateNutrientRatioConstraints(formulationData.nutrientRatioConstraints || [])
-        fetchspecialformulations(formulationData.animal_group) // Fetch special formulations based on animal group
+        
+        // Ensure nutrientRatioConstraints have both name and ID fields (fix for data persistence issue when using the solver)
+        let patchedNutrientRatioConstraints = (formulationData.nutrientRatioConstraints || []).map(constraint => {
+          // If IDs are missing, try to find them from the nutrients array
+          if (!constraint.firstIngredientId || !constraint.secondIngredientId) {
+            const first = (formulationData.nutrients || []).find(n => n.name === constraint.firstIngredient)
+            const second = (formulationData.nutrients || []).find(n => n.name === constraint.secondIngredient)
+            return {
+              ...constraint,
+              firstIngredientId: first ? first.nutrient_id : constraint.firstIngredientId,
+              secondIngredientId: second ? second.nutrient_id : constraint.secondIngredientId,
+            }
+          }
+          return constraint
+        })
+        updateNutrientRatioConstraints(patchedNutrientRatioConstraints)
+        fetchspecialformulations(formulationData.animal_group)
       }
       // set owner id
       const owner = formulationData?.collaborators?.find((collaborator) => collaborator.access === "owner")

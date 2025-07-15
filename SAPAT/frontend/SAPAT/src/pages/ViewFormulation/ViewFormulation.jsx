@@ -302,6 +302,13 @@ function ViewFormulation({
     type
   ) => {
     try {
+      // UNCOMMENT/DELETE IF NOT NEEDED
+      console.log("DEBUG HERE: FRONTEND SENING OF DATA TO SOLVER!")
+      console.log("Ingredients", ingredients)
+      console.log("Nutrients", nutrients)
+      console.log("Weight", weight)
+      console.log("Nutrient Ratios", nutrientRatioConstraints)
+
       const res = await axios.post(`${VITE_API_URL}/optimize/${type}`, {
         userId: owner?.userId,
         ingredients,

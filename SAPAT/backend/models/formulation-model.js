@@ -18,7 +18,9 @@ const nutrientConstraintSchema = new Schema({
 
 const nutrientRatioConstraintSchema = new Schema({
     firstIngredient: { type: String },
+    firstIngredientId: { type: Schema.Types.ObjectId, ref: 'Nutrient' },
     secondIngredient: { type: String },
+    secondIngredientId: { type: Schema.Types.ObjectId, ref: 'Nutrient' },
     operator: { type: String },
     firstIngredientRatio: { type: Number },
     secondIngredientRatio: { type: Number }
