@@ -2,7 +2,7 @@ import { RiCloseLine } from 'react-icons/ri'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Info from '../../icons/Info.jsx'
-import { Combobox } from '@headlessui/react'
+import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/react'
 import { HiSelector, HiCheck } from 'react-icons/hi'
 
 function CreateFormulationModal({
@@ -236,22 +236,22 @@ function CreateFormulationModal({
               <label className="label">
                 <span className="label-text">Use Template</span>
               </label>
-              <Combobox value={selectedTemplate} onChange={setSelectedTemplate} disabled={isTemplateDisabled}>
+              <Combobox value={selectedTemplate} onChange={setSelectedTemplate} disabled={isTemplateDisabled} by="id">
                 <div className="relative">
-                  <Combobox.Input
+                  <ComboboxInput
                     className="input input-bordered w-full rounded-xl pr-10"
                     displayValue={(t) => t?.name || ''}
                     onChange={(e) => setTemplateQuery(e.target.value)}
                     placeholder={isTemplateDisabled ? 'Select animal group first' : 'Select template'}
                     disabled={isTemplateDisabled}
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
                     <HiSelector className="h-5 w-5 text-gray-400" />
-                  </Combobox.Button>
+                  </ComboboxButton>
                   {!isTemplateDisabled && filteredTemplates.length > 0 && (
-                    <Combobox.Options className="absolute z-10 mt-1 max-h-56 w-full max-w-[350px] overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <ComboboxOptions className="absolute z-10 max-h-56 w-full max-w-[350px] overflow-auto bg-white py-1 text-base ring-[0.5px] -mt-[0.1px] focus:outline-none">
                       {filteredTemplates.map((template) => (
-                        <Combobox.Option
+                        <ComboboxOption
                           key={template.id}
                           value={template}
                           className={({ active }) =>
@@ -268,9 +268,9 @@ function CreateFormulationModal({
                               {template.name}
                             </span>
                           )}
-                        </Combobox.Option>
+                        </ComboboxOption>
                       ))}
-                    </Combobox.Options>
+                    </ComboboxOptions>
                   )}
                 </div>
               </Combobox>
