@@ -15,7 +15,8 @@ import {
   removeNutrient,
   validateCollaborator,
   updateCollaborator,
-  removeCollaborator
+  removeCollaborator,
+  getAllTemplateFormulations
 } from './controller/formulation-controller.js';
 import {
   createIngredient, getAllIngredients, getIngredient, getIngredientsByFilters, updateIngredient, deleteIngredient, importIngredient
@@ -97,6 +98,7 @@ const handleRoutes = (app) => {
   app.get('/formulation/collaborator/:formulationId/:collaboratorId', validateCollaborator);
   app.put('/formulation/collaborator/:id', updateCollaborator);
   app.delete('/formulation/collaborator/:formulationId/:collaboratorId', removeCollaborator);
+  app.get('/formulation/templates', getAllTemplateFormulations);
 
   app.post('/ingredient', createIngredient);
   app.get('/ingredient/filtered/:userId', getAllIngredients);

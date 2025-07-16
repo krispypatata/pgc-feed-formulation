@@ -7,7 +7,6 @@ const createFormulation = async (req, res) => {
         code, name, description, animal_group, ownerId, ownerName
     } = req.body;
     try {
-        // Fetch the user to check userType
         const User = (await import('../models/user-model.js')).default;
         const owner = await User.findById(ownerId);
         const isTemplate = owner && owner.userType === 'admin';
@@ -475,6 +474,17 @@ const removeCollaborator = async (req,res) => {
     }
 }
 
+const getAllTemplateFormulations = async (req, res) => {
+    try {
+        const formulations = await Formulation.find({ isTemplate: true });
+        res.status(200).json({
+            message: 'success',
+            formulations
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message, message: 'error' })
+    }
+}
 
 
 export {
@@ -492,5 +502,6 @@ export {
     removeNutrient,
     validateCollaborator,
     updateCollaborator,
-    removeCollaborator
+    removeCollaborator,
+    getAllTemplateFormulations
 };
