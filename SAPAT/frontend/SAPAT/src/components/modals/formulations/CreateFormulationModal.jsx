@@ -160,7 +160,7 @@ function CreateFormulationModal({
         <h3 className="text-deepbrown mb-1 text-lg font-bold">
           Create Formulation
         </h3>
-        <p className="mb-8 flex text-sm text-gray-500">
+        <p className="mb-8 flex text-sm text-gray-500 whitespace-nowrap">
           <Info />
           Set up initial details for your new formulation.
         </p>
