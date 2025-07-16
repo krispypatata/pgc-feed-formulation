@@ -1,7 +1,9 @@
 import { RiCloseLine } from 'react-icons/ri'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Info from '../../icons/Info.jsx'
+import { Combobox } from '@headlessui/react'
+import { HiSelector, HiCheck } from 'react-icons/hi'
 
 function CreateFormulationModal({
   formulations,
@@ -20,6 +22,53 @@ function CreateFormulationModal({
   const [isDisabled, setIsDisabled] = useState(false)
   const [codeError, setCodeError] = useState('')
   const [nameError, setNameError] = useState('')
+  const [templateQuery, setTemplateQuery] = useState('')
+  const [selectedTemplate, setSelectedTemplate] = useState({ id: 0, name: 'None' })
+
+  // Dummy template options by animal group
+  const animalGroupTemplates = {
+    'Swine': [
+      { id: 0, name: 'None' },
+      { id: 1, name: 'Swine Sample Template 1' },
+      { id: 2, name: 'Swine Sample Template 2' },
+      { id: 3, name: 'Swine Sample Template 3' },
+      { id: 4, name: 'Swine Sample Template 4' },
+      { id: 5, name: 'Swine Sample Template 5' },
+      { id: 6, name: 'Swine Sample Template 6' },
+    ],
+    'Poultry': [
+      { id: 0, name: 'None' },
+      { id: 7, name: 'Poultry Sample Template 1' },
+      { id: 8, name: 'Poultry Sample Template 2' },
+      { id: 9, name: 'Poultry Sample Template 3' },
+      { id: 10, name: 'Poultry Sample Template 4' },
+      { id: 11, name: 'Poultry Sample Template 5' },
+      { id: 12, name: 'Poultry Sample Template 6' },
+    ],
+    'Water Buffalo': [
+      { id: 0, name: 'None' },
+      { id: 13, name: 'Water Buffalo Sample Template 1' },
+      { id: 14, name: 'Water Buffalo Sample Template 2' },
+      { id: 15, name: 'Water Buffalo Sample Template 3' },
+      { id: 16, name: 'Water Buffalo Sample Template 4' },
+      { id: 17, name: 'Water Buffalo Sample Template 5' },
+      { id: 18, name: 'Water Buffalo Sample Template 6' },
+    ],
+  }
+  const templateOptions = animalGroupTemplates[formData.animal_group] || []
+  const isTemplateDisabled = !formData.animal_group
+  const filteredTemplates =
+    templateQuery === ''
+      ? templateOptions
+      : templateOptions.filter((t) =>
+          t.name.toLowerCase().includes(templateQuery.toLowerCase())
+        )
+
+  // Reset template selection when animal group changes
+  useEffect(() => {
+    setSelectedTemplate({ id: 0, name: 'None' })
+    setTemplateQuery('')
+  }, [formData.animal_group])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -99,7 +148,7 @@ function CreateFormulationModal({
       id="create_formulation_modal"
       className={`modal ${isOpen ? 'modal-open' : ''}`}
     >
-      <div className="modal-box relative mt-[64px] w-11/12 max-w-2xl rounded-3xl bg-white md:mt-0">
+      <div className="modal-box relative mt-[64px] w-11/12 max-w-2xl min-h-[500px] min-w-[350px] overflow-hidden rounded-3xl bg-white md:mt-0">
         {/* Close button */}
         <button
           className="btn btn-sm btn-circle absolute top-4 right-4"
@@ -161,6 +210,7 @@ function CreateFormulationModal({
               )}
             </div>
 
+            {/* Animal Group Select */}
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">Animal Group</span>
@@ -179,6 +229,50 @@ function CreateFormulationModal({
                 <option value="Poultry">Poultry</option>
                 <option value="Water Buffalo">Water Buffalo</option>
               </select>
+            </div>
+            {/* Template Combobox */}
+            <div className="form-control w-full">
+              <label className="label">
+                <span className="label-text">Use Template</span>
+              </label>
+              <Combobox value={selectedTemplate} onChange={setSelectedTemplate} disabled={isTemplateDisabled}>
+                <div className="relative">
+                  <Combobox.Input
+                    className="input input-bordered w-full rounded-xl pr-10"
+                    displayValue={(t) => t?.name || ''}
+                    onChange={(e) => setTemplateQuery(e.target.value)}
+                    placeholder={isTemplateDisabled ? 'Select animal group first' : 'Select template'}
+                    disabled={isTemplateDisabled}
+                  />
+                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <HiSelector className="h-5 w-5 text-gray-400" />
+                  </Combobox.Button>
+                  {!isTemplateDisabled && filteredTemplates.length > 0 && (
+                    <Combobox.Options className="absolute z-10 mt-1 max-h-56 w-full max-w-[350px] overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      {filteredTemplates.map((template) => (
+                        <Combobox.Option
+                          key={template.id}
+                          value={template}
+                          className={({ active }) =>
+                            `cursor-pointer select-none px-4 py-2 ${
+                              active ? 'bg-base-200 text-primary' : 'text-gray-900'
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <span className={`flex items-center`}>
+                              {selected && (
+                                <HiCheck className="mr-2 h-5 w-5 text-primary" />
+                              )}
+                              {template.name}
+                            </span>
+                          )}
+                        </Combobox.Option>
+                      ))}
+                    </Combobox.Options>
+                  )}
+                </div>
+              </Combobox>
             </div>
 
             <div className="form-control w-full md:col-span-2">
