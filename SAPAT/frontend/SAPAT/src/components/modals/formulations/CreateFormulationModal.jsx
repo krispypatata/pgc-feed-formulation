@@ -12,6 +12,7 @@ function CreateFormulationModal({
   isOpen,
   onClose,
   onResult,
+  userType 
 }) {
   const [formData, setFormData] = useState({
     code: '',
@@ -98,7 +99,7 @@ function CreateFormulationModal({
     } else {
       setNameError('')
     }
-    const body = { ...formData, ownerId, ownerName }
+    const body = { ...formData, ownerId, ownerName, userType };
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/formulation`,

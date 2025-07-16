@@ -255,6 +255,7 @@ function Formulations() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onResult={handleCreateResult}
+        userType={user.userType} 
       />
 
       

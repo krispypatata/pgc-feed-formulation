@@ -55,6 +55,10 @@ const formulationSchema = new Schema({
         type: [userAccessSchema],
         default: []
     },
+    isTemplate: {
+        type: Boolean,
+        default: false
+    },
     createdAt: {
         type: Date,
         default: Date.now

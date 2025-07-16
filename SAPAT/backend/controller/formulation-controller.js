@@ -7,8 +7,14 @@ const createFormulation = async (req, res) => {
         code, name, description, animal_group, ownerId, ownerName
     } = req.body;
     try {
+        // Fetch the user to check userType
+        const User = (await import('../models/user-model.js')).default;
+        const owner = await User.findById(ownerId);
+        const isTemplate = owner && owner.userType === 'admin';
         const newFormulation = await Formulation.create({
-            code, name, description, animal_group, collaborators: [{ userId: ownerId, access: 'owner', displayName: ownerName }],
+            code, name, description, animal_group, 
+            collaborators: [{ userId: ownerId, access: 'owner', displayName: ownerName }],
+            isTemplate
         });
         const filteredFormulation = {
             "_id": newFormulation._id,
@@ -16,6 +22,7 @@ const createFormulation = async (req, res) => {
             "name": name,
             "description": description ? description : "",
             "animal_group": animal_group ? animal_group : "",
+            "isTemplate": isTemplate
         }
         res.status(200).json({ message: 'success', formulations: filteredFormulation });
     } catch (err) {
