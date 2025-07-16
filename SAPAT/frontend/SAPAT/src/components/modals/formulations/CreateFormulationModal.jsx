@@ -267,50 +267,52 @@ function CreateFormulationModal({
                 <option value="Water Buffalo">Water Buffalo</option>
               </select>
             </div>
-            {/* Template Combobox */}
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text">Use Template</span>
-              </label>
-              <Combobox value={selectedTemplate} onChange={setSelectedTemplate} disabled={isTemplateDisabled} by="id">
-                <div className="relative">
-                  <ComboboxInput
-                    className="input input-bordered w-full rounded-xl pr-10"
-                    displayValue={(t) => t?.name || ''}
-                    onChange={(e) => setTemplateQuery(e.target.value)}
-                    placeholder={isTemplateDisabled ? (fetchError ? fetchError : 'Select animal group first') : 'Select template'}
-                    disabled={isTemplateDisabled}
-                  />
-                  <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <HiSelector className="h-5 w-5 text-gray-400" />
-                  </ComboboxButton>
-                  {!isTemplateDisabled && filteredTemplates.length > 0 && (
-                    <ComboboxOptions className="absolute z-10 max-h-56 w-full max-w-[350px] overflow-auto bg-white py-1 text-base ring-[0.5px] -mt-[0.1px] focus:outline-none">
-                      {filteredTemplates.map((template) => (
-                        <ComboboxOption
-                          key={template.id}
-                          value={template}
-                          className={({ active }) =>
-                            `cursor-pointer select-none px-4 py-2 ${
-                              active ? 'bg-base-200 text-primary' : 'text-gray-900'
-                            }`
-                          }
-                        >
-                          {({ selected }) => (
-                            <span className={`flex items-center`}>
-                              {selected && (
-                                <HiCheck className="mr-2 h-5 w-5 text-primary" />
-                              )}
-                              {template.name}
-                            </span>
-                          )}
-                        </ComboboxOption>
-                      ))}
-                    </ComboboxOptions>
-                  )}
-                </div>
-              </Combobox>
-            </div>
+            {/* Template Combobox - only show if userType is not 'admin' */}
+            {userType !== 'admin' && (
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text">Use Template</span>
+                </label>
+                <Combobox value={selectedTemplate} onChange={setSelectedTemplate} disabled={isTemplateDisabled} by="id">
+                  <div className="relative">
+                    <ComboboxInput
+                      className="input input-bordered w-full rounded-xl pr-10"
+                      displayValue={(t) => t?.name || ''}
+                      onChange={(e) => setTemplateQuery(e.target.value)}
+                      placeholder={isTemplateDisabled ? (fetchError ? fetchError : 'Select animal group first') : 'Select template'}
+                      disabled={isTemplateDisabled}
+                    />
+                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <HiSelector className="h-5 w-5 text-gray-400" />
+                    </ComboboxButton>
+                    {!isTemplateDisabled && filteredTemplates.length > 0 && (
+                      <ComboboxOptions className="absolute z-10 max-h-56 w-full max-w-[350px] overflow-auto bg-white py-1 text-base ring-[0.5px] -mt-[0.1px] focus:outline-none">
+                        {filteredTemplates.map((template) => (
+                          <ComboboxOption
+                            key={template.id}
+                            value={template}
+                            className={({ active }) =>
+                              `cursor-pointer select-none px-4 py-2 ${
+                                active ? 'bg-base-200 text-primary' : 'text-gray-900'
+                              }`
+                            }
+                          >
+                            {({ selected }) => (
+                              <span className={`flex items-center`}>
+                                {selected && (
+                                  <HiCheck className="mr-2 h-5 w-5 text-primary" />
+                                )}
+                                {template.name}
+                              </span>
+                            )}
+                          </ComboboxOption>
+                        ))}
+                      </ComboboxOptions>
+                    )}
+                  </div>
+                </Combobox>
+              </div>
+            )}
 
             <div className="form-control w-full md:col-span-2">
               <label className="label">
