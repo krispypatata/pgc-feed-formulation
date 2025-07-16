@@ -25,8 +25,12 @@ function CreateFormulationModal({
   const [nameError, setNameError] = useState('')
   const [templateQuery, setTemplateQuery] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState({ id: 0, name: 'None' })
+  const [fetchedTemplates, setFetchedTemplates] = useState([])
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
+  const [fetchError, setFetchError] = useState('')
 
   // Dummy template options by animal group
+  /*
   const animalGroupTemplates = {
     'Swine': [
       { id: 0, name: 'None' },
@@ -56,20 +60,52 @@ function CreateFormulationModal({
       { id: 18, name: 'Water Buffalo Sample Template 6' },
     ],
   }
-  const templateOptions = animalGroupTemplates[formData.animal_group] || []
-  const isTemplateDisabled = !formData.animal_group
-  const filteredTemplates =
-    templateQuery === ''
-      ? templateOptions
-      : templateOptions.filter((t) =>
-          t.name.toLowerCase().includes(templateQuery.toLowerCase())
-        )
+  */
+
+  // Fetch templates from backend when modal opens or animal group changes
+  useEffect(() => {
+    if (!isOpen) return;
+    setIsLoadingTemplates(true);
+    setFetchError('');
+    axios.get(`${import.meta.env.VITE_API_URL}/formulation/templates`)
+      .then((res) => {
+        if (res.data && Array.isArray(res.data.formulations)) {
+          setFetchedTemplates(res.data.formulations);
+        } else {
+          setFetchedTemplates([]);
+        }
+      })
+      .catch(() => {
+        setFetchError('Failed to fetch templates');
+        setFetchedTemplates([]);
+      })
+      .finally(() => setIsLoadingTemplates(false));
+  }, [isOpen]);
 
   // Reset template selection when animal group changes
   useEffect(() => {
     setSelectedTemplate({ id: 0, name: 'None' })
     setTemplateQuery('')
   }, [formData.animal_group])
+
+  // Filter fetched templates by selected animal group
+  const templateOptions = [
+    { id: 0, name: 'None' },
+    ...(
+      formData.animal_group
+        ? fetchedTemplates
+            .filter(t => t.animal_group === formData.animal_group)
+            .map(t => ({ id: t._id, name: t.name, ...t }))
+        : []
+    )
+  ];
+  const isTemplateDisabled = !formData.animal_group || isLoadingTemplates || !!fetchError;
+  const filteredTemplates =
+    templateQuery === ''
+      ? templateOptions
+      : templateOptions.filter((t) =>
+          t.name.toLowerCase().includes(templateQuery.toLowerCase())
+        )
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -242,7 +278,7 @@ function CreateFormulationModal({
                     className="input input-bordered w-full rounded-xl pr-10"
                     displayValue={(t) => t?.name || ''}
                     onChange={(e) => setTemplateQuery(e.target.value)}
-                    placeholder={isTemplateDisabled ? 'Select animal group first' : 'Select template'}
+                    placeholder={isTemplateDisabled ? (fetchError ? fetchError : 'Select animal group first') : 'Select template'}
                     disabled={isTemplateDisabled}
                   />
                   <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">

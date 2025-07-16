@@ -86,7 +86,6 @@ const handleRoutes = (app) => {
   app.post('/formulation', createFormulation);
   app.get('/formulation/filtered/:collaboratorId', getAllFormulations);
   app.get('/formulation/special/:animalgroup', getAllSpecialFormulations);
-  app.get('/formulation/:id', getFormulation);
   app.get('/formulation/filtered/search/:userId', getFormulationByFilters);
   app.put('/formulation/:id', updateFormulation);
   app.delete('/formulation/:id', deleteFormulation);
@@ -99,6 +98,7 @@ const handleRoutes = (app) => {
   app.put('/formulation/collaborator/:id', updateCollaborator);
   app.delete('/formulation/collaborator/:formulationId/:collaboratorId', removeCollaborator);
   app.get('/formulation/templates', getAllTemplateFormulations);
+  app.get('/formulation/:id', getFormulation);
 
   app.post('/ingredient', createIngredient);
   app.get('/ingredient/filtered/:userId', getAllIngredients);
