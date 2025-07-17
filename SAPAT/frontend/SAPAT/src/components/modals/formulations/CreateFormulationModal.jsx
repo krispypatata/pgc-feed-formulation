@@ -141,9 +141,29 @@ function CreateFormulationModal({
         `${import.meta.env.VITE_API_URL}/formulation`,
         body
       )
-      console.log('res:', res)
-      const newFormulation = res.data.formulations
+      let newFormulation = res.data.formulations
       newFormulation.access = 'owner'
+      // If a template is selected, clone its dependencies
+      if (selectedTemplate && selectedTemplate.id && selectedTemplate.id !== 0) {
+        try {
+          setIsDisabled(true)
+          const cloneRes = await axios.post(
+            `${import.meta.env.VITE_API_URL}/formulation/${newFormulation._id}/clone-template`,
+            {
+              templateId: selectedTemplate.id,
+              userId: ownerId
+            }
+          )
+          if (cloneRes.data && cloneRes.data.formulations) {
+            newFormulation = cloneRes.data.formulations
+          }
+        } catch (cloneErr) {
+          console.error(cloneErr)
+          onResult(null, 'error', 'Failed to clone template dependencies.')
+          setIsDisabled(false)
+          return
+        }
+      }
       onResult(newFormulation, 'success', 'Successfully created formulation.')
       // Reset form
       setFormData({

@@ -1,5 +1,8 @@
 import Formulation from '../models/formulation-model.js';
 import SpecialFormulation from '../models/special-formulation-model.js';
+import Ingredient from '../models/ingredient-model.js';
+import Nutrient from '../models/nutrient-model.js';
+import User from '../models/user-model.js';
 
 
 const createFormulation = async (req, res) => {
@@ -486,6 +489,103 @@ const getAllTemplateFormulations = async (req, res) => {
     }
 }
 
+const cloneTemplateToFormulation = async (req, res) => {
+  const { id: newFormulaId } = req.params;
+  const { templateId, userId } = req.body;
+  try {
+    // Fetch template and new formula
+    const template = await Formulation.findById(templateId);
+    const newFormula = await Formulation.findById(newFormulaId);
+    if (!template || !newFormula) {
+      return res.status(404).json({ message: 'Template or new formula not found' });
+    }
+
+    // --- Clone Nutrients ---
+    const nutrientNameToUserNutrient = {};
+    const clonedNutrients = [];
+    for (const n of template.nutrients) {
+      let userNutrient = await Nutrient.findOne({ name: n.name, user: userId });
+      if (!userNutrient) {
+        userNutrient = await Nutrient.create({
+          abbreviation: n.name.substring(0, 3).toUpperCase(),
+          name: n.name,
+          unit: n.unit || '',
+          description: '',
+          group: '',
+          source: 'user',
+          user: userId
+        });
+      }
+      nutrientNameToUserNutrient[n.name] = userNutrient;
+      clonedNutrients.push({
+        nutrient_id: userNutrient._id,
+        name: userNutrient.name,
+        minimum: n.minimum,
+        maximum: n.maximum,
+        value: n.value
+      });
+    }
+
+    // Clone Ingredients ---
+    const clonedIngredients = [];
+    for (const i of template.ingredients) {
+      // Fetch the full ingredient document from the Ingredient collection
+      const templateIngredientDoc = await Ingredient.findById(i.ingredient_id);
+      if (!templateIngredientDoc) continue;
+      // Build nutrients array for this ingredient using the nutrient name map
+      const ingredientNutrients = [];
+      if (templateIngredientDoc.nutrients && Array.isArray(templateIngredientDoc.nutrients)) {
+        for (const n of templateIngredientDoc.nutrients) {
+          // Find the nutrient name from the nutrient document
+          let nutrientDoc = null;
+          if (n.nutrient) {
+            nutrientDoc = await Nutrient.findById(n.nutrient);
+          }
+          const nutrientName = nutrientDoc ? nutrientDoc.name : null;
+          if (nutrientName && nutrientNameToUserNutrient[nutrientName]) {
+            ingredientNutrients.push({
+              nutrient: nutrientNameToUserNutrient[nutrientName]._id,
+              value: n.value
+            });
+          }
+        }
+      }
+      // Always create a new ingredient for the user
+      const userIngredient = await Ingredient.create({
+        name: templateIngredientDoc.name,
+        price: templateIngredientDoc.price || 0,
+        available: templateIngredientDoc.available || 1,
+        group: templateIngredientDoc.group || '',
+        description: templateIngredientDoc.description || '',
+        source: 'user',
+        user: userId,
+        nutrients: ingredientNutrients
+      });
+      clonedIngredients.push({
+        ingredient_id: userIngredient._id,
+        name: userIngredient.name,
+        minimum: i.minimum,
+        maximum: i.maximum,
+        value: i.value
+      });
+    }
+
+    // Clone Nutrient Ratio Constraints
+    const clonedRatios = (template.nutrientRatioConstraints || []).map(r => ({ ...r.toObject?.() || r }));
+
+    // Update the new formula
+    newFormula.ingredients = clonedIngredients;
+    newFormula.nutrients = clonedNutrients;
+    newFormula.nutrientRatioConstraints = clonedRatios;
+    await newFormula.save();
+
+    res.status(200).json({ message: 'success', formulations: newFormula });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'error', error: err.message });
+  }
+};
+
 
 export {
     createFormulation,
@@ -503,5 +603,6 @@ export {
     validateCollaborator,
     updateCollaborator,
     removeCollaborator,
-    getAllTemplateFormulations
+    getAllTemplateFormulations,
+    cloneTemplateToFormulation
 };
