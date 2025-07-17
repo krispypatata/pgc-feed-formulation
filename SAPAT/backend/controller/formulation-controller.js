@@ -503,6 +503,7 @@ const cloneTemplateToFormulation = async (req, res) => {
     // Clone Nutrients
     const nutrientNameToUserNutrient = {};
     const clonedNutrients = [];
+    const templateDescription = `From template: ${template.name} (${template.animal_group})`;
     for (const n of template.nutrients) {
       // Fetch the full nutrient document from the Nutrient collection
       let templateNutrientDoc = null;
@@ -517,7 +518,7 @@ const cloneTemplateToFormulation = async (req, res) => {
           abbreviation: templateNutrientDoc?.abbreviation || n.abbreviation || nutrientName.substring(0, 3).toUpperCase(),
           name: nutrientName,
           unit: templateNutrientDoc?.unit || n.unit || '',
-          description: templateNutrientDoc?.description || n.description || '',
+          description: templateDescription,
           group: templateNutrientDoc?.group || n.group || '',
           source: 'user',
           user: userId
@@ -563,7 +564,7 @@ const cloneTemplateToFormulation = async (req, res) => {
         price: templateIngredientDoc.price || 0,
         available: templateIngredientDoc.available || 1,
         group: templateIngredientDoc.group || '',
-        description: templateIngredientDoc.description || '',
+        description: templateDescription,
         source: 'user',
         user: userId,
         nutrients: ingredientNutrients
