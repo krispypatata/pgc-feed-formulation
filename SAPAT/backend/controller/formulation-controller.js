@@ -540,35 +540,39 @@ const cloneTemplateToFormulation = async (req, res) => {
       // Fetch the full ingredient document from the Ingredient collection
       const templateIngredientDoc = await Ingredient.findById(i.ingredient_id);
       if (!templateIngredientDoc) continue;
-      // Build nutrients array for this ingredient using the nutrient name map
-      const ingredientNutrients = [];
-      if (templateIngredientDoc.nutrients && Array.isArray(templateIngredientDoc.nutrients)) {
-        for (const n of templateIngredientDoc.nutrients) {
-          // Find the nutrient name from the nutrient document
-          let nutrientDoc = null;
-          if (n.nutrient) {
-            nutrientDoc = await Nutrient.findById(n.nutrient);
-          }
-          const nutrientName = nutrientDoc ? nutrientDoc.name : null;
-          if (nutrientName && nutrientNameToUserNutrient[nutrientName]) {
-            ingredientNutrients.push({
-              nutrient: nutrientNameToUserNutrient[nutrientName]._id,
-              value: n.value
-            });
+      // Check if the user already has an ingredient with the same name
+      let userIngredient = await Ingredient.findOne({ name: templateIngredientDoc.name, user: userId });
+      if (!userIngredient) {
+        // Build nutrients array for this ingredient using the nutrient name map
+        const ingredientNutrients = [];
+        if (templateIngredientDoc.nutrients && Array.isArray(templateIngredientDoc.nutrients)) {
+          for (const n of templateIngredientDoc.nutrients) {
+            // Find the nutrient name from the nutrient document
+            let nutrientDoc = null;
+            if (n.nutrient) {
+              nutrientDoc = await Nutrient.findById(n.nutrient);
+            }
+            const nutrientName = nutrientDoc ? nutrientDoc.name : null;
+            if (nutrientName && nutrientNameToUserNutrient[nutrientName]) {
+              ingredientNutrients.push({
+                nutrient: nutrientNameToUserNutrient[nutrientName]._id,
+                value: n.value
+              });
+            }
           }
         }
+        // Create a new ingredient for the user
+        userIngredient = await Ingredient.create({
+          name: templateIngredientDoc.name,
+          price: templateIngredientDoc.price || 0,
+          available: templateIngredientDoc.available || 1,
+          group: templateIngredientDoc.group || '',
+          description: templateDescription,
+          source: 'user',
+          user: userId,
+          nutrients: ingredientNutrients
+        });
       }
-      // Always create a new ingredient for the user
-      const userIngredient = await Ingredient.create({
-        name: templateIngredientDoc.name,
-        price: templateIngredientDoc.price || 0,
-        available: templateIngredientDoc.available || 1,
-        group: templateIngredientDoc.group || '',
-        description: templateDescription,
-        source: 'user',
-        user: userId,
-        nutrients: ingredientNutrients
-      });
       clonedIngredients.push({
         ingredient_id: userIngredient._id,
         name: userIngredient.name,

@@ -282,6 +282,7 @@ function CreateFormulationModal({
                 <option value="" disabled>
                   Select group
                 </option>
+                <option value="Fish">Fish</option>
                 <option value="Swine">Swine</option>
                 <option value="Poultry">Poultry</option>
                 <option value="Water Buffalo">Water Buffalo</option>
