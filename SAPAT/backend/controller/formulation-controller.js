@@ -500,23 +500,30 @@ const cloneTemplateToFormulation = async (req, res) => {
       return res.status(404).json({ message: 'Template or new formula not found' });
     }
 
-    // --- Clone Nutrients ---
+    // Clone Nutrients
     const nutrientNameToUserNutrient = {};
     const clonedNutrients = [];
     for (const n of template.nutrients) {
-      let userNutrient = await Nutrient.findOne({ name: n.name, user: userId });
+      // Fetch the full nutrient document from the Nutrient collection
+      let templateNutrientDoc = null;
+      if (n.nutrient_id) {
+        templateNutrientDoc = await Nutrient.findById(n.nutrient_id);
+      }
+      // Fallback: use summary if not found
+      const nutrientName = templateNutrientDoc ? templateNutrientDoc.name : n.name;
+      let userNutrient = await Nutrient.findOne({ name: nutrientName, user: userId });
       if (!userNutrient) {
         userNutrient = await Nutrient.create({
-          abbreviation: n.name.substring(0, 3).toUpperCase(),
-          name: n.name,
-          unit: n.unit || '',
-          description: '',
-          group: '',
+          abbreviation: templateNutrientDoc?.abbreviation || n.abbreviation || nutrientName.substring(0, 3).toUpperCase(),
+          name: nutrientName,
+          unit: templateNutrientDoc?.unit || n.unit || '',
+          description: templateNutrientDoc?.description || n.description || '',
+          group: templateNutrientDoc?.group || n.group || '',
           source: 'user',
           user: userId
         });
       }
-      nutrientNameToUserNutrient[n.name] = userNutrient;
+      nutrientNameToUserNutrient[nutrientName] = userNutrient;
       clonedNutrients.push({
         nutrient_id: userNutrient._id,
         name: userNutrient.name,
@@ -526,7 +533,7 @@ const cloneTemplateToFormulation = async (req, res) => {
       });
     }
 
-    // Clone Ingredients ---
+    // Clone Ingredients
     const clonedIngredients = [];
     for (const i of template.ingredients) {
       // Fetch the full ingredient document from the Ingredient collection
